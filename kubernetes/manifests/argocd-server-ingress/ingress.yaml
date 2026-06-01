@@ -1,0 +1,46 @@
+# Ingress for ArgoCD UI, fronted by an ALB. Cert is auto-discovered by
+# the AWS Load Balancer Controller via the host SAN match against our
+# imported Cloudflare Origin cert (*.internal.gauchoracing.com).
+#
+# The external-dns annotations tell the cluster's external-dns instance
+# to create:
+#   argocd.internal.gauchoracing.com  CNAME  <alb-hostname>  (proxied)
+#
+# Cloudflare proxies traffic (orange-cloud) → terminates public TLS at
+# the edge → re-establishes TLS to the ALB using our Origin cert.
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server
+  namespace: argocd
+  annotations:
+    # ALB controller configuration
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    # ArgoCD server runs HTTP internally (server.insecure: true in the
+    # Helm values); the ALB terminates TLS and proxies to it on port 80.
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
+
+    # external-dns: create the Cloudflare record + proxy through CF edge.
+    external-dns.alpha.kubernetes.io/hostname: argocd.internal.gauchoracing.com
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  ingressClassName: alb
+  # tls block triggers ALB controller cert auto-discovery in ACM by SAN match.
+  tls:
+    - hosts:
+        - argocd.internal.gauchoracing.com
+  rules:
+    - host: argocd.internal.gauchoracing.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocd-server
+                port:
+                  number: 80
