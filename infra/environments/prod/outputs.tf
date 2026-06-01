@@ -22,7 +22,7 @@ output "cluster_oidc_provider_arn" {
   value = module.eks.oidc_provider_arn
 }
 
-output "internal_acm_certificate_arn" {
-  description = "ACM ARN for the *.internal.gauchoracing.com cert. Used in Ingress annotations."
-  value       = module.origin_cert_internal.acm_certificate_arn
+output "acm_certificate_arn" {
+  description = "ACM ARN for the *.gauchoracing.com origin cert. Used in Ingress annotations (or picked up automatically by the ALB controller via SAN match)."
+  value       = module.origin_cert.acm_certificate_arn
 }

@@ -4,7 +4,7 @@
 #
 # The external-dns annotations tell the cluster's external-dns instance
 # to create:
-#   argocd.internal.gauchoracing.com  CNAME  <alb-hostname>  (proxied)
+#   argocd.gauchoracing.com  CNAME  <alb-hostname>  (proxied)
 #
 # Cloudflare proxies traffic (orange-cloud) → terminates public TLS at
 # the edge → re-establishes TLS to the ALB using our Origin cert.
@@ -25,16 +25,16 @@ metadata:
     alb.ingress.kubernetes.io/backend-protocol: HTTP
 
     # external-dns: create the Cloudflare record + proxy through CF edge.
-    external-dns.alpha.kubernetes.io/hostname: argocd.internal.gauchoracing.com
+    external-dns.alpha.kubernetes.io/hostname: argocd.gauchoracing.com
     external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
 spec:
   ingressClassName: alb
   # tls block triggers ALB controller cert auto-discovery in ACM by SAN match.
   tls:
     - hosts:
-        - argocd.internal.gauchoracing.com
+        - argocd.gauchoracing.com
   rules:
-    - host: argocd.internal.gauchoracing.com
+    - host: argocd.gauchoracing.com
       http:
         paths:
           - path: /
