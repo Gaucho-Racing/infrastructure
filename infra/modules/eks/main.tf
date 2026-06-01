@@ -35,5 +35,25 @@ module "eks" {
     node_pools = var.node_pools
   }
 
+  # Cluster admin access entries for human operators. The IAM principal
+  # that runs `terraform apply` is already granted admin via
+  # enable_cluster_creator_admin_permissions above — these entries are
+  # for everyone else who needs kubectl access (e.g. a user who runs
+  # apply via CI but also needs to debug from their laptop).
+  access_entries = {
+    for principal_arn in var.cluster_admin_principals :
+    replace(principal_arn, "/[^a-zA-Z0-9-]/", "-") => {
+      principal_arn = principal_arn
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
+    }
+  }
+
   tags = var.tags
 }

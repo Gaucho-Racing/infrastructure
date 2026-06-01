@@ -31,6 +31,12 @@ variable "node_pools" {
   default     = ["general-purpose", "system"]
 }
 
+variable "cluster_admin_principals" {
+  description = "IAM principal ARNs (users or roles) granted AmazonEKSClusterAdminPolicy at cluster scope. Use for human operators who need kubectl access; service accounts inside the cluster should use IRSA via oidc_provider_arn instead."
+  type        = list(string)
+  default     = []
+}
+
 variable "tags" {
   description = "Tags applied to cluster resources."
   type        = map(string)
