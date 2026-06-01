@@ -46,7 +46,10 @@ module "eks" {
       principal_arn = principal_arn
       policy_associations = {
         admin = {
-          policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterAdminPolicy"
+          # EKS access policies use the arn:aws:eks::aws:cluster-access-policy/
+          # scheme — NOT the standard IAM policy ARN format. These are managed
+          # by EKS, not IAM.
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
           access_scope = {
             type = "cluster"
           }
