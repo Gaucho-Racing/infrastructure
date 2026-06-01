@@ -1,0 +1,78 @@
+# external-dns watches Ingress + Service resources and reconciles
+# Cloudflare DNS records from their hostnames. Adding a new service is
+# then: create the Ingress with a hostname annotation, external-dns
+# creates the matching record. No more manual TF for each DNS entry.
+#
+# Pulls its Cloudflare credentials from a Secret in the external-dns
+# namespace named "cloudflare-api-token", key "api-token". Create it
+# once after this Application syncs:
+#
+#   kubectl create namespace external-dns
+#   kubectl -n external-dns create secret generic cloudflare-api-token \
+#     --from-literal=api-token=$CLOUDFLARE_API_TOKEN
+#
+# (One-shot; switch to External Secrets Operator + AWS Secrets Manager
+# later if we want full GitOps for secrets.)
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: external-dns
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://kubernetes-sigs.github.io/external-dns
+    chart: external-dns
+    targetRevision: 1.18.0
+    helm:
+      releaseName: external-dns
+      values: |
+        provider:
+          name: cloudflare
+
+        # Only manage records on the zones we care about — prevents
+        # accidental writes if external-dns sees Ingresses for other domains.
+        domainFilters:
+          - gauchoracing.com
+
+        # sync = create + update + delete based on cluster state. Mirrors
+        # Ingresses exactly. Switch to "upsert-only" if delete behavior
+        # ever gets too aggressive.
+        policy: sync
+
+        # TXT registry: external-dns writes a sibling TXT record per A/CNAME
+        # so it can later identify which records it owns. Without this it
+        # won't touch existing records.
+        registry: txt
+        txtOwnerId: gr-prod
+        txtPrefix: ext-
+
+        # Watch only Ingress resources for now. Add "service" later if we
+        # want LoadBalancer Services to also get DNS automatically.
+        sources:
+          - ingress
+
+        env:
+          - name: CF_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: cloudflare-api-token
+                key: api-token
+
+        # Surface external-dns's actions in its own logs — useful when
+        # debugging "why didn't my record appear?"
+        logLevel: info
+        logFormat: json
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: external-dns
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
