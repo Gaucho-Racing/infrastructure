@@ -1,6 +1,7 @@
 # Terraform
 .terraform/
-.terraform.lock.hcl
+# .terraform.lock.hcl is intentionally NOT ignored — it pins provider
+# versions across runs and should be committed alongside the root module.
 *.tfstate
 *.tfstate.*
 *.tfvars
