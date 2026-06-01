@@ -75,6 +75,21 @@ resource "aws_security_group_rule" "ingress_sg" {
   description              = "Postgres from ${each.value}"
 }
 
+# Ingress on 5432 from arbitrary CIDR blocks (admin laptops, the public
+# internet, etc.). Only the strong scram-sha-256 password protects this
+# path — IP allowlist is the better defense in depth, but the caller
+# chose how wide to open it.
+resource "aws_security_group_rule" "ingress_cidr" {
+  count             = length(var.admin_cidr_blocks) > 0 ? 1 : 0
+  type              = "ingress"
+  from_port         = 5432
+  to_port           = 5432
+  protocol          = "tcp"
+  cidr_blocks       = var.admin_cidr_blocks
+  security_group_id = aws_security_group.this.id
+  description       = "Postgres from admin CIDRs"
+}
+
 resource "aws_ebs_volume" "data" {
   availability_zone = var.availability_zone
   size              = var.data_volume_size_gb
@@ -94,11 +109,12 @@ resource "aws_ebs_volume" "data" {
 }
 
 resource "aws_instance" "this" {
-  ami                    = data.aws_ami.al2023_arm64.id
-  instance_type          = var.instance_type
-  subnet_id              = var.subnet_id
-  vpc_security_group_ids = [aws_security_group.this.id]
-  availability_zone      = var.availability_zone
+  ami                         = data.aws_ami.al2023_arm64.id
+  instance_type               = var.instance_type
+  subnet_id                   = var.subnet_id
+  vpc_security_group_ids      = [aws_security_group.this.id]
+  availability_zone           = var.availability_zone
+  associate_public_ip_address = var.associate_public_ip
 
   root_block_device {
     volume_size = 20
@@ -128,4 +144,16 @@ resource "aws_volume_attachment" "data" {
   device_name = "/dev/sdf" # appears as /dev/nvme1n1 inside the instance
   volume_id   = aws_ebs_volume.data.id
   instance_id = aws_instance.this.id
+}
+
+# Stable public IP. Stop/start of the underlying instance would otherwise
+# rotate the auto-assigned public IP and break DNS.
+resource "aws_eip" "this" {
+  count    = var.associate_public_ip ? 1 : 0
+  domain   = "vpc"
+  instance = aws_instance.this.id
+
+  tags = {
+    Name = "${var.name}"
+  }
 }

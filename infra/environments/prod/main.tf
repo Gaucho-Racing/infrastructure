@@ -77,13 +77,37 @@ module "postgres" {
 
   name              = "gr-postgres"
   vpc_id            = module.vpc.vpc_id
-  subnet_id         = module.vpc.private_subnet_ids[0]
+  subnet_id         = module.vpc.public_subnet_ids[0]
   availability_zone = "us-west-2a"
 
   instance_type       = "t4g.medium"
   data_volume_size_gb = 50
 
+  # Public IP + open to the internet on 5432. The 32-char random password
+  # + scram-sha-256 is the only gate; tighten the CIDR list later if/when
+  # a known set of admin IPs makes sense.
+  associate_public_ip = true
+  admin_cidr_blocks   = ["0.0.0.0/0"]
+
   allowed_security_group_ids = [
     module.eks.node_security_group_id,
   ]
+}
+
+# Cloudflare DNS record for the Postgres EIP. Gray-cloud (proxied = false)
+# because Cloudflare's free plan only proxies HTTP/HTTPS, not TCP. The real
+# IP is exposed in DNS as a result — SG + Postgres auth are the protection.
+data "cloudflare_zone" "gauchoracing" {
+  filter = {
+    name = "gauchoracing.com"
+  }
+}
+
+resource "cloudflare_dns_record" "gr_postgres" {
+  zone_id = data.cloudflare_zone.gauchoracing.id
+  name    = "gr-postgres"
+  type    = "A"
+  content = module.postgres.public_ip
+  ttl     = 300
+  proxied = false
 }

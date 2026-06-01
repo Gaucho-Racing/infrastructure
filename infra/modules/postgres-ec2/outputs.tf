@@ -8,6 +8,11 @@ output "private_ip" {
   value       = aws_instance.this.private_ip
 }
 
+output "public_ip" {
+  description = "EIP-assigned public IP, if associate_public_ip = true; null otherwise."
+  value       = try(aws_eip.this[0].public_ip, null)
+}
+
 output "security_group_id" {
   description = "Security group ID of the Postgres instance. Add ingress rules for any additional callers."
   value       = aws_security_group.this.id

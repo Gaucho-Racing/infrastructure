@@ -32,6 +32,11 @@ output "postgres_private_ip" {
   value       = module.postgres.private_ip
 }
 
+output "postgres_public_ip" {
+  description = "Public IP of the Postgres EC2 (EIP). External clients connect to this on 5432, or use gr-postgres.gauchoracing.com."
+  value       = module.postgres.public_ip
+}
+
 output "postgres_password" {
   description = "Generated postgres user password. Read with `terraform output -raw postgres_password`."
   value       = module.postgres.postgres_password

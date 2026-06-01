@@ -31,13 +31,25 @@ variable "data_volume_size_gb" {
 }
 
 variable "db_name" {
-  description = "Application database created on first boot."
+  description = "Application database to ensure exists on first boot. Defaults to \"postgres\" which is the always-present default DB — create per-service DBs (sentinel, mapache, ...) separately via SQL once the server is up."
   type        = string
-  default     = "sentinel"
+  default     = "postgres"
 }
 
 variable "allowed_security_group_ids" {
   description = "Security group IDs allowed to connect on port 5432. Typically the EKS node SG."
   type        = list(string)
   default     = []
+}
+
+variable "admin_cidr_blocks" {
+  description = "CIDR blocks allowed to connect to 5432 directly. Use specific IPs (your laptop, office) for least exposure, or \"0.0.0.0/0\" to leave password as the only gate."
+  type        = list(string)
+  default     = []
+}
+
+variable "associate_public_ip" {
+  description = "If true, the instance gets a public IP via an EIP. Required when allowing inbound connections from outside the VPC."
+  type        = bool
+  default     = false
 }
