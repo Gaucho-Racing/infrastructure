@@ -61,3 +61,29 @@ module "origin_cert" {
     "gauchoracing.com",
   ]
 }
+
+# Postgres on EC2. Lives in the EKS VPC so pods reach it via private IP;
+# SG-locked to traffic originating from the EKS node SG so nothing outside
+# the cluster can connect. ARM/Graviton (t4g.medium) for cost.
+#
+# Generated password is in TF state — read with:
+#   terraform output -raw postgres_password
+# then create a k8s Secret manually:
+#   kubectl -n sentinel create secret generic sentinel-secrets \
+#     --from-literal=POSTGRES_PASSWORD="$(terraform output -raw postgres_password)" \
+#     --from-literal=DISCORD_TOKEN=...
+module "postgres" {
+  source = "../../modules/postgres-ec2"
+
+  name              = "sentinel"
+  vpc_id            = module.vpc.vpc_id
+  subnet_id         = module.vpc.private_subnet_ids[0]
+  availability_zone = "us-west-2a"
+
+  instance_type       = "t4g.medium"
+  data_volume_size_gb = 50
+
+  allowed_security_group_ids = [
+    module.eks.node_security_group_id,
+  ]
+}

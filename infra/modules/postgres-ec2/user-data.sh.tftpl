@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+set -euxo pipefail
+
+# Wait for the data volume to attach. AWS asynchronously attaches secondary
+# volumes; cloud-init can start before /dev/nvme1n1 exists.
+DATA_DEVICE="/dev/nvme1n1"
+for _ in $(seq 1 30); do
+  [ -b "$DATA_DEVICE" ] && break
+  sleep 2
+done
+
+# Format only if not already a filesystem — prevents wipe on instance
+# replacement when the EBS volume is preserved.
+if ! blkid "$DATA_DEVICE" >/dev/null 2>&1; then
+  mkfs.ext4 -L postgres-data "$DATA_DEVICE"
+fi
+
+mkdir -p /var/lib/postgresql
+echo "LABEL=postgres-data /var/lib/postgresql ext4 defaults,nofail 0 2" >> /etc/fstab
+mount /var/lib/postgresql
+
+# Install PostgreSQL 16 from the Amazon Linux 2023 repos.
+dnf install -y postgresql16 postgresql16-server postgresql16-contrib
+
+# Initialize the DB cluster on the EBS volume (only if empty).
+PGDATA="/var/lib/postgresql/data"
+mkdir -p "$PGDATA"
+chown postgres:postgres "$PGDATA"
+chmod 700 "$PGDATA"
+
+if [ ! -f "$PGDATA/PG_VERSION" ]; then
+  sudo -u postgres /usr/bin/initdb -D "$PGDATA"
+fi
+
+# Override the default data dir in the systemd unit. AL2023 installs
+# postgresql.service with PGDATA pointing at /var/lib/pgsql; we want
+# /var/lib/postgresql/data to keep the data on the dedicated EBS volume.
+mkdir -p /etc/systemd/system/postgresql.service.d
+cat > /etc/systemd/system/postgresql.service.d/override.conf <<EOF
+[Service]
+Environment=PGDATA=$PGDATA
+EOF
+
+# Listen on the VPC interface (not just loopback) so the EKS pods can
+# connect. We don't expose the SG to anything outside the VPC.
+cat > "$PGDATA/postgresql.conf.local" <<EOF
+listen_addresses = '*'
+port = 5432
+EOF
+echo "include = 'postgresql.conf.local'" >> "$PGDATA/postgresql.conf"
+
+# pg_hba: allow connections from the VPC CIDR with password auth. Local
+# unix-socket connections stay trust-auth as the default postgres user.
+cat >> "$PGDATA/pg_hba.conf" <<EOF
+
+# Allow connections from the VPC. The security group is the real boundary;
+# this just permits the protocol-level connection.
+host    all             all             ${vpc_cidr}        scram-sha-256
+EOF
+
+chown postgres:postgres "$PGDATA/postgresql.conf.local" "$PGDATA/pg_hba.conf"
+
+systemctl daemon-reload
+systemctl enable postgresql
+systemctl start postgresql
+
+# Set the postgres user password + create the application database.
+# %-quoted because the password is interpolated from terraform.
+sudo -u postgres psql -v ON_ERROR_STOP=1 <<EOF
+ALTER USER postgres WITH PASSWORD '${postgres_password}';
+SELECT 'CREATE DATABASE ${db_name}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${db_name}')\gexec
+EOF

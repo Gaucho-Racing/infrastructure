@@ -26,3 +26,14 @@ output "acm_certificate_arn" {
   description = "ACM ARN for the *.gauchoracing.com origin cert. Used in Ingress annotations (or picked up automatically by the ALB controller via SAN match)."
   value       = module.origin_cert.acm_certificate_arn
 }
+
+output "postgres_private_ip" {
+  description = "Private IP of the Postgres EC2. Pods connect to this on 5432."
+  value       = module.postgres.private_ip
+}
+
+output "postgres_password" {
+  description = "Generated postgres user password. Read with `terraform output -raw postgres_password`."
+  value       = module.postgres.postgres_password
+  sensitive   = true
+}
