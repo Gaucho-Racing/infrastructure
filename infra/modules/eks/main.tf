@@ -26,13 +26,31 @@ module "eks" {
   # only the IAM role that created the cluster has admin.
   enable_cluster_creator_admin_permissions = true
 
-  # Auto Mode. node_pools picks the AWS-managed default Karpenter pools
-  # to enable; "general-purpose" is the workhorse, "system" is small
-  # instances for system pods. Custom NodePool CRs can be added later
-  # without changing this list.
+  # Auto Mode is split into three opt-in pillars: compute (Karpenter),
+  # networking (AWS Load Balancer Controller), and storage (EBS CSI).
+  # All three need to be enabled to get a fully managed cluster — enabling
+  # only compute leaves you without an ingress controller or PVC support,
+  # which silently breaks Ingress/StatefulSet workflows.
   compute_config = {
     enabled    = true
     node_pools = var.node_pools
+  }
+
+  # Enables Auto Mode's managed AWS Load Balancer Controller, which
+  # provisions ALBs/NLBs for Ingress + Service-type-LoadBalancer
+  # resources. Without this, ingressClassName: alb is a no-op.
+  kubernetes_network_config = {
+    elastic_load_balancing = {
+      enabled = true
+    }
+  }
+
+  # Enables Auto Mode's managed EBS CSI driver. PVCs of the default
+  # StorageClass land on gp3 EBS volumes provisioned automatically.
+  storage_config = {
+    block_storage = {
+      enabled = true
+    }
   }
 
   # Cluster admin access entries for human operators. The IAM principal
