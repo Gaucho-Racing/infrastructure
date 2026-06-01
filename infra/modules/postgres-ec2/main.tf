@@ -46,7 +46,7 @@ resource "random_password" "postgres" {
 }
 
 resource "aws_security_group" "this" {
-  name        = "${var.name}"
+  name        = var.name
   description = "Postgres for ${var.name}"
   vpc_id      = var.vpc_id
 
