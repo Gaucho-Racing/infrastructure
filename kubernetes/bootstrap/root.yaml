@@ -1,0 +1,43 @@
+# Root ArgoCD Application — the "app of apps" entrypoint.
+#
+# After ArgoCD is installed via terraform (infra/modules/argocd), apply
+# this once manually:
+#
+#   kubectl apply -f kubernetes/bootstrap/root.yaml
+#
+# From then on, ArgoCD reads kubernetes/apps/ from this repo and
+# reconciles every Application resource it finds there. Adding a new
+# managed system (Sentinel, observability stack, etc.) is just:
+#
+#   1. Add a new Application YAML under kubernetes/apps/
+#   2. Commit + push
+#   3. ArgoCD picks it up on next sync (~3 min default, or instant via
+#      `argocd app sync root`)
+#
+# The root Application also manages itself — editing this file in Git
+# and re-syncing will update its own spec.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Gaucho-Racing/infrastructure.git
+    targetRevision: main
+    path: kubernetes/apps
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
