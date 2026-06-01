@@ -1,3 +1,8 @@
+# Prod environment composition. Modules are referenced from ../../modules/;
+# see those directories for the input/output contracts. Backend + provider
+# config lives in backend.tf so terraform-apply CI can `terraform init`
+# against this directory directly.
+
 locals {
   cluster_name = "gr-prod"
 }

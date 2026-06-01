@@ -1,0 +1,5 @@
+# Reviewers are auto-requested on PRs based on the paths touched. Pair
+# this with a branch protection rule requiring Code Owner review if you
+# want it enforced rather than just suggestive.
+
+/infra/ @bk1031
