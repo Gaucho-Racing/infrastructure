@@ -29,9 +29,11 @@ module "eks" {
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnet_ids
 
-  cluster_admin_principals = [
-    "arn:aws:iam::211125506628:user/admin-cli",
-  ]
+  # admin-cli is the cluster creator and is already granted admin via
+  # enable_cluster_creator_admin_permissions inside the module. Don't
+  # re-list it here — duplicates a single principal_arn across two
+  # access entries and EKS rejects it.
+  cluster_admin_principals = []
 }
 
 module "argocd" {
