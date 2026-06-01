@@ -1,0 +1,57 @@
+name: terraform apply
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infra/**"
+      - ".github/workflows/terraform-*.yml"
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "Environment to apply"
+        required: true
+        default: "prod"
+        type: choice
+        options: [prod]
+
+permissions:
+  contents: read
+  id-token: write        # for AWS OIDC
+
+jobs:
+  apply:
+    name: apply (${{ matrix.env }})
+    runs-on: ubuntu-latest
+
+    # The `production` GitHub Environment is the gate: configure required
+    # reviewers in repo Settings → Environments → production. Apply jobs
+    # will park here until a reviewer approves.
+    environment: production
+
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [prod]
+
+    defaults:
+      run:
+        working-directory: infra/environments/${{ matrix.env }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.5
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TERRAFORM_ROLE_ARN }}
+          aws-region: us-west-2
+
+      - name: terraform init
+        run: terraform init -no-color -input=false
+
+      - name: terraform apply
+        run: terraform apply -no-color -input=false -auto-approve

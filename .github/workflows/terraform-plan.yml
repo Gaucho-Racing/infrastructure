@@ -1,0 +1,125 @@
+name: terraform plan
+
+on:
+  pull_request:
+    paths:
+      - "infra/**"
+      - ".github/workflows/terraform-*.yml"
+
+permissions:
+  contents: read
+  pull-requests: write   # for posting plan as a PR comment
+  id-token: write        # for AWS OIDC
+
+jobs:
+  plan:
+    name: plan (${{ matrix.env }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [prod]
+
+    defaults:
+      run:
+        working-directory: infra/environments/${{ matrix.env }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.15.5
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TERRAFORM_ROLE_ARN }}
+          aws-region: us-west-2
+
+      - name: terraform fmt
+        id: fmt
+        working-directory: infra
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: terraform init
+        id: init
+        run: terraform init -no-color
+
+      - name: terraform validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: terraform plan
+        id: plan
+        run: terraform plan -no-color -input=false
+        continue-on-error: true
+
+      - name: post plan as PR comment
+        uses: actions/github-script@v7
+        env:
+          PLAN: ${{ steps.plan.outputs.stdout }}
+        with:
+          script: |
+            const fmt = '${{ steps.fmt.outcome }}'
+            const init = '${{ steps.init.outcome }}'
+            const validate = '${{ steps.validate.outcome }}'
+            const plan = '${{ steps.plan.outcome }}'
+            const env = '${{ matrix.env }}'
+
+            // Truncate plan output if it would blow past GitHub's 65k char
+            // comment limit. Last 60k chars is usually where the relevant
+            // resource diffs end up.
+            let planOut = process.env.PLAN || ''
+            const MAX = 60000
+            if (planOut.length > MAX) {
+              planOut = '...(truncated)...\n' + planOut.slice(-MAX)
+            }
+
+            const body = `### Terraform plan: \`${env}\`
+
+            | step | result |
+            |---|---|
+            | fmt | \`${fmt}\` |
+            | init | \`${init}\` |
+            | validate | \`${validate}\` |
+            | plan | \`${plan}\` |
+
+            <details><summary>plan output</summary>
+
+            \`\`\`hcl
+            ${planOut}
+            \`\`\`
+
+            </details>
+            `
+
+            // Find and edit an existing comment from this workflow if it
+            // exists, otherwise post a new one. Keeps the PR tidy on
+            // re-runs.
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            })
+            const marker = `### Terraform plan: \`${env}\``
+            const existing = comments.find((c) => c.body.startsWith(marker))
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              })
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              })
+            }
+
+      - name: fail if any step failed
+        if: steps.fmt.outcome == 'failure' || steps.plan.outcome == 'failure'
+        run: exit 1
