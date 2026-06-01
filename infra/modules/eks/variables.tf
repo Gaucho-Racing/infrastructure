@@ -4,9 +4,9 @@ variable "name" {
 }
 
 variable "kubernetes_version" {
-  description = "Kubernetes minor version (e.g. \"1.34\"). EKS supports the last few releases; check the AWS docs for the current support window."
+  description = "Kubernetes minor version (e.g. \"1.35\"). EKS supports the last few releases; check the AWS docs for the current support window."
   type        = string
-  default     = "1.34"
+  default     = "1.35"
 }
 
 variable "vpc_id" {
