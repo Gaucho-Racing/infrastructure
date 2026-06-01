@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+set -euxo pipefail
+
+# Wait for the data volume to attach. AWS asynchronously attaches secondary
+# volumes; cloud-init can start before /dev/nvme1n1 exists.
+DATA_DEVICE="/dev/nvme1n1"
+for _ in $(seq 1 30); do
+  [ -b "$DATA_DEVICE" ] && break
+  sleep 2
+done
+
+# Format only if not already a filesystem — prevents wipe on instance
+# replacement when the EBS volume is preserved.
+if ! blkid "$DATA_DEVICE" >/dev/null 2>&1; then
+  mkfs.ext4 -L postgres-data "$DATA_DEVICE"
+fi
+
+mkdir -p /var/lib/postgresql
+echo "LABEL=postgres-data /var/lib/postgresql ext4 defaults,nofail 0 2" >> /etc/fstab
+mount /var/lib/postgresql
+
+# Postgres 18 ships through the PGDG repo (PostgreSQL Global Development
+# Group). AL2023's bundled postgresql module is on an older major; using
+# PGDG lets us pin to a specific server version independent of AL2023's
+# upgrade cadence. AL2023 is RHEL9-compatible, so EL-9 packages work.
+ARCH=$(uname -m)
+dnf install -y "https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-$ARCH/pgdg-redhat-repo-latest.noarch.rpm"
+
+# Disable AL2023's built-in postgresql module to prevent dnf from
+# preferring it over the PGDG packages.
+dnf -qy module disable postgresql >/dev/null 2>&1 || true
+
+dnf install -y postgresql18-server postgresql18-contrib
+
+# PGDG installs binaries to /usr/pgsql-18/bin/. PATH them so subsequent
+# psql / pg_isready calls find the right version.
+PG_BIN=/usr/pgsql-18/bin
+PG_SERVICE=postgresql-18
+
+# Initialize the DB cluster on the EBS volume (only if empty).
+PGDATA="/var/lib/postgresql/data"
+mkdir -p "$PGDATA"
+chown postgres:postgres "$PGDATA"
+chmod 700 "$PGDATA"
+
+if [ ! -f "$PGDATA/PG_VERSION" ]; then
+  sudo -u postgres "$PG_BIN/initdb" -D "$PGDATA"
+fi
+
+# PGDG's systemd unit defaults PGDATA to /var/lib/pgsql/18/data. Override
+# it to our EBS-backed location so all the data sits on the dedicated
+# volume and survives instance replacement.
+mkdir -p /etc/systemd/system/$PG_SERVICE.service.d
+cat > /etc/systemd/system/$PG_SERVICE.service.d/override.conf <<EOF
+[Service]
+Environment=PGDATA=$PGDATA
+EOF
+
+# Listen on every interface — the SG enforces the real boundary.
+cat > "$PGDATA/postgresql.conf.local" <<EOF
+listen_addresses = '*'
+port = 5432
+EOF
+echo "include = 'postgresql.conf.local'" >> "$PGDATA/postgresql.conf"
+
+# pg_hba: allow connections from the VPC CIDR with password auth. Local
+# unix-socket connections stay peer-auth via PGDG's default.
+cat >> "$PGDATA/pg_hba.conf" <<EOF
+
+# Allow connections from the VPC. The security group is the real boundary;
+# this just permits the protocol-level connection.
+host    all             all             ${vpc_cidr}        scram-sha-256
+EOF
+
+chown postgres:postgres "$PGDATA/postgresql.conf.local" "$PGDATA/pg_hba.conf"
+
+systemctl daemon-reload
+systemctl enable $PG_SERVICE
+systemctl start $PG_SERVICE
+
+# Wait for Postgres to be ready before issuing SQL.
+for _ in $(seq 1 30); do
+  if sudo -u postgres "$PG_BIN/pg_isready" -q; then break; fi
+  sleep 1
+done
+
+# Set the postgres user password + ensure the application database exists.
+sudo -u postgres "$PG_BIN/psql" -v ON_ERROR_STOP=1 <<EOF
+ALTER USER postgres WITH PASSWORD '${postgres_password}';
+SELECT 'CREATE DATABASE ${db_name}' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '${db_name}')\gexec
+EOF
