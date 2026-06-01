@@ -46,7 +46,7 @@ resource "random_password" "postgres" {
 }
 
 resource "aws_security_group" "this" {
-  name        = "${var.name}-pg"
+  name        = "${var.name}"
   description = "Postgres for ${var.name}"
   vpc_id      = var.vpc_id
 
@@ -59,7 +59,7 @@ resource "aws_security_group" "this" {
   }
 
   tags = {
-    Name = "${var.name}-pg"
+    Name = "${var.name}"
   }
 }
 
@@ -82,7 +82,7 @@ resource "aws_ebs_volume" "data" {
   encrypted         = true
 
   tags = {
-    Name = "${var.name}-pg-data"
+    Name = "${var.name}-data"
   }
 
   # Preserve the volume across instance replacements. To intentionally
@@ -119,7 +119,7 @@ resource "aws_instance" "this" {
   }
 
   tags = {
-    Name = "${var.name}-pg"
+    Name = "${var.name}"
     Role = "postgres"
   }
 }

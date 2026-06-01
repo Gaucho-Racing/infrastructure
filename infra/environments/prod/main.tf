@@ -75,7 +75,7 @@ module "origin_cert" {
 module "postgres" {
   source = "../../modules/postgres-ec2"
 
-  name              = "sentinel"
+  name              = "gr-postgres"
   vpc_id            = module.vpc.vpc_id
   subnet_id         = module.vpc.private_subnet_ids[0]
   availability_zone = "us-west-2a"
