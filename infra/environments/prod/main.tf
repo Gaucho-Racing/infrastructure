@@ -28,4 +28,8 @@ module "eks" {
 
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnet_ids
+
+  cluster_admin_principals = [
+    "arn:aws:iam::211125506628:user/admin-cli",
+  ]
 }
