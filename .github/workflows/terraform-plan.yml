@@ -20,6 +20,10 @@ jobs:
       matrix:
         env: [prod]
 
+    env:
+      # Cloudflare provider picks this up automatically.
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
     defaults:
       run:
         working-directory: infra/environments/${{ matrix.env }}
