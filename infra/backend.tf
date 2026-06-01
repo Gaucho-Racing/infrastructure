@@ -8,12 +8,11 @@
 #      egg with Terraform, do it via the AWS console or a one-off script.
 #   2. `terraform init -backend-config="key=environments/dev/terraform.tfstate"`
 #
-# TODO: replace <bucket-name> once the state bucket exists.
 terraform {
   required_version = ">= 1.10"
 
   backend "s3" {
-    bucket       = "<bucket-name>"
+    bucket       = "gaucho-racing-tfstate"
     key          = "placeholder.tfstate"
     region       = "us-west-2"
     encrypt      = true
