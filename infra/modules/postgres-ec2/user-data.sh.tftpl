@@ -23,8 +23,26 @@ mount /var/lib/postgresql
 # Group). AL2023's bundled postgresql module is on an older major; using
 # PGDG lets us pin to a specific server version independent of AL2023's
 # upgrade cadence. AL2023 is RHEL9-compatible, so EL-9 packages work.
+#
+# The PGDG repo RPM requires /etc/redhat-release, which AL2023 doesn't
+# ship. Write the .repo file directly to bypass that dependency.
 ARCH=$(uname -m)
-dnf install -y "https://download.postgresql.org/pub/repos/yum/reporpms/EL-9-$ARCH/pgdg-redhat-repo-latest.noarch.rpm"
+rpm --import https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG
+cat > /etc/yum.repos.d/pgdg.repo <<EOF
+[pgdg-common]
+name=PostgreSQL common RPMs for RHEL 9 - $ARCH
+baseurl=https://download.postgresql.org/pub/repos/yum/common/redhat/rhel-9-$ARCH
+enabled=1
+gpgcheck=1
+gpgkey=https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG
+
+[pgdg18]
+name=PostgreSQL 18 for RHEL 9 - $ARCH
+baseurl=https://download.postgresql.org/pub/repos/yum/18/redhat/rhel-9-$ARCH
+enabled=1
+gpgcheck=1
+gpgkey=https://download.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG
+EOF
 
 # Disable AL2023's built-in postgresql module to prevent dnf from
 # preferring it over the PGDG packages.
