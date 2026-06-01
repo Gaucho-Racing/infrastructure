@@ -33,3 +33,12 @@ module "eks" {
     "arn:aws:iam::211125506628:user/admin-cli",
   ]
 }
+
+module "argocd" {
+  source = "../../modules/argocd"
+
+  # No custom values for now. Domain placeholder until DNS lands.
+  domain = "argocd.gauchoracing.com"
+
+  depends_on = [module.eks]
+}
