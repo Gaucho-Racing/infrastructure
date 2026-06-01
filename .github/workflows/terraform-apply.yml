@@ -29,6 +29,10 @@ jobs:
     # will park here until a reviewer approves.
     environment: production
 
+    env:
+      # Cloudflare provider picks this up automatically.
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
     strategy:
       fail-fast: false
       matrix:

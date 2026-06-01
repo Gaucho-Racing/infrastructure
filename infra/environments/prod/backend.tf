@@ -20,8 +20,21 @@ terraform {
       source  = "hashicorp/helm"
       version = "~> 3.0"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 5.0"
+    }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
   }
 }
+
+# Cloudflare provider picks up credentials from the CLOUDFLARE_API_TOKEN
+# environment variable. Token needs Zone:Read, DNS:Edit, and
+# SSL and Certificates:Edit on the gauchoracing.com zone.
+provider "cloudflare" {}
 
 provider "aws" {
   region = "us-west-2"
