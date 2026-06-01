@@ -43,17 +43,21 @@ module "argocd" {
   depends_on = [module.eks]
 }
 
-# Wildcard cert for *.internal.gauchoracing.com — every team-only service
-# (argocd, future sentinel admin UIs, etc.) terminates TLS on its ALB
-# using this cert. Public-facing TLS terminates at the Cloudflare edge
-# using Cloudflare's auto-generated edge cert.
-module "origin_cert_internal" {
+# Wildcard cert for *.gauchoracing.com — every service (argocd, sentinel,
+# whatever else lands later) terminates TLS on its ALB using this cert.
+# Public-facing TLS terminates at the Cloudflare edge using Cloudflare's
+# auto-generated edge cert.
+#
+# First-level wildcard (not *.internal.*) because Cloudflare free-plan
+# Universal SSL only covers single-depth subdomains. Deeper nesting would
+# need Advanced Certificate Manager.
+module "origin_cert" {
   source = "../../modules/origin-cert"
 
-  name        = "internal.gauchoracing.com"
-  common_name = "*.internal.gauchoracing.com"
+  name        = "gauchoracing.com"
+  common_name = "*.gauchoracing.com"
   hostnames = [
-    "*.internal.gauchoracing.com",
-    "internal.gauchoracing.com",
+    "*.gauchoracing.com",
+    "gauchoracing.com",
   ]
 }
