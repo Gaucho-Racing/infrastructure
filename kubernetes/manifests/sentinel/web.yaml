@@ -14,13 +14,13 @@ spec:
         app: web
     spec:
       # One replica per node — see comment in core.yaml.
-      topologySpreadConstraints:
-        - maxSkew: 1
-          topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: DoNotSchedule
-          labelSelector:
-            matchLabels:
-              app: web
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: web
+              topologyKey: kubernetes.io/hostname
       containers:
         - name: web
           # Tag is set by kustomization.yaml's images block.

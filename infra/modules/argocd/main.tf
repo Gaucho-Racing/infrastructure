@@ -36,6 +36,17 @@ resource "helm_release" "argocd" {
         nodeSelector = {
           "capacity-type" = "on-demand-baseline"
         }
+        # The on-demand pool is tainted `dedicated=argocd:NoSchedule` to
+        # keep other workloads off it. ArgoCD tolerates so its pods
+        # actually schedule there.
+        tolerations = [
+          {
+            key      = "dedicated"
+            operator = "Equal"
+            value    = "argocd"
+            effect   = "NoSchedule"
+          }
+        ]
       }
       configs = {
         params = {
