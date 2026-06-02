@@ -1,0 +1,43 @@
+# Spot-preferred NodePool. Mirrors the AWS-managed `general-purpose`
+# pool's instance constraints (c/m/r categories, gen > 4, amd64/linux)
+# but allows spot capacity. Spot+on-demand together means Karpenter
+# picks spot when available (cheaper) and on-demand when not.
+#
+# weight=100 makes this the preferred pool over `general-purpose`
+# (default weight 0). Both reference the same AWS-managed NodeClass.
+
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: spot
+spec:
+  weight: 100
+  template:
+    spec:
+      requirements:
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["spot", "on-demand"]
+        - key: eks.amazonaws.com/instance-category
+          operator: In
+          values: ["c", "m", "r"]
+        - key: eks.amazonaws.com/instance-generation
+          operator: Gt
+          values: ["4"]
+        - key: kubernetes.io/arch
+          operator: In
+          values: ["amd64"]
+        - key: kubernetes.io/os
+          operator: In
+          values: ["linux"]
+      nodeClassRef:
+        group: eks.amazonaws.com
+        kind: NodeClass
+        name: default
+      expireAfter: 336h
+      terminationGracePeriod: 24h
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 30s
+    budgets:
+      - nodes: "10%"

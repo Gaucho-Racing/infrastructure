@@ -1,0 +1,29 @@
+# Karpenter NodePool that prefers spot capacity. Most of our workloads
+# are stateless (Sentinel web/API services, ArgoCD controllers) so spot
+# is a good fit — Karpenter handles the 2-minute eviction notice with
+# its standard drain logic and reschedules pods on a fresh node.
+#
+# Falls back to on-demand inside the same pool if no matching spot
+# capacity is available. The AWS-managed `general-purpose` NodePool
+# (on-demand only) remains as a deeper fallback.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spot-nodepool
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Gaucho-Racing/infrastructure.git
+    targetRevision: main
+    path: kubernetes/manifests/spot-nodepool
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
