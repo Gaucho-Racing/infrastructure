@@ -14,13 +14,13 @@ spec:
         app: oauth
     spec:
       # One replica per node — see comment in core.yaml.
-      topologySpreadConstraints:
-        - maxSkew: 1
-          topologyKey: kubernetes.io/hostname
-          whenUnsatisfiable: DoNotSchedule
-          labelSelector:
-            matchLabels:
-              app: oauth
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: oauth
+              topologyKey: kubernetes.io/hostname
       containers:
         - name: oauth
           # Tag is set by kustomization.yaml's images block.
