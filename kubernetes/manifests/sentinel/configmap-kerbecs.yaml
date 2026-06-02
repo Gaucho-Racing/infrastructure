@@ -46,25 +46,25 @@ data:
         name: sentinel-core
         version: 0.1.0
         instances:
-          - http://core:9999
+          - http://core.sentinel.svc.cluster.local:9999
 
       oauth:
         name: sentinel-oauth
         version: 0.1.0
         instances:
-          - http://oauth:9997
+          - http://oauth.sentinel.svc.cluster.local:9997
 
       discord:
         name: sentinel-discord
         version: 0.1.0
         instances:
-          - http://discord:9998
+          - http://discord.sentinel.svc.cluster.local:9998
 
       web:
         name: sentinel-web
         version: 0.1.0
         instances:
-          - http://web:80
+          - http://web.sentinel.svc.cluster.local:80
 
     routes:
       - name: core-internal

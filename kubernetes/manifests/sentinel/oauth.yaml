@@ -24,7 +24,7 @@ spec:
             - name: PORT
               value: "9997"
             - name: DATABASE_HOST
-              value: postgres
+              value: postgres.sentinel.svc.cluster.local
             - name: DATABASE_PORT
               value: "5432"
             - name: DATABASE_USER
@@ -37,7 +37,7 @@ spec:
                   name: sentinel-secrets
                   key: POSTGRES_PASSWORD
             - name: RINCON_ENDPOINT
-              value: http://rincon:10311
+              value: http://rincon.sentinel.svc.cluster.local:10311
             - name: RINCON_USER
               value: admin
             - name: RINCON_PASSWORD
@@ -46,9 +46,9 @@ spec:
                   name: sentinel-secrets
                   key: RINCON_PASSWORD
             - name: SERVICE_ENDPOINT
-              value: http://oauth:9997
+              value: http://oauth.sentinel.svc.cluster.local:9997
             - name: SERVICE_HEALTH_CHECK
-              value: http://oauth:9997/oauth/ping
+              value: http://oauth.sentinel.svc.cluster.local:9997/oauth/ping
 ---
 apiVersion: v1
 kind: Service

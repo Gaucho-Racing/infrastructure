@@ -24,7 +24,7 @@ spec:
             - name: PORT
               value: "9998"
             - name: DATABASE_HOST
-              value: postgres
+              value: postgres.sentinel.svc.cluster.local
             - name: DATABASE_PORT
               value: "5432"
             - name: DATABASE_USER
@@ -37,7 +37,7 @@ spec:
                   name: sentinel-secrets
                   key: POSTGRES_PASSWORD
             - name: RINCON_ENDPOINT
-              value: http://rincon:10311
+              value: http://rincon.sentinel.svc.cluster.local:10311
             - name: RINCON_USER
               value: admin
             - name: RINCON_PASSWORD
@@ -46,9 +46,9 @@ spec:
                   name: sentinel-secrets
                   key: RINCON_PASSWORD
             - name: SERVICE_ENDPOINT
-              value: http://discord:9998
+              value: http://discord.sentinel.svc.cluster.local:9998
             - name: SERVICE_HEALTH_CHECK
-              value: http://discord:9998/discord/ping
+              value: http://discord.sentinel.svc.cluster.local:9998/discord/ping
             - name: DISCORD_GUILD
               value: "756738476887638107"
             - name: DISCORD_PREFIX
