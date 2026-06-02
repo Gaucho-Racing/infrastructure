@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: core
+  namespace: sentinel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: core
+  template:
+    metadata:
+      labels:
+        app: core
+    spec:
+      containers:
+        - name: core
+          # Tag is set by kustomization.yaml's images block.
+          image: ghcr.io/gaucho-racing/sentinel-core:latest
+          ports:
+            - containerPort: 9999
+          env:
+            - name: ENV
+              value: PROD
+            - name: PORT
+              value: "9999"
+            - name: DATABASE_HOST
+              value: postgres.sentinel.svc.cluster.local
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_USER
+              value: postgres
+            - name: DATABASE_NAME
+              value: sentinel
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sentinel-secrets
+                  key: POSTGRES_PASSWORD
+            - name: RINCON_ENDPOINT
+              value: http://rincon.sentinel.svc.cluster.local:10311
+            - name: RINCON_USER
+              value: admin
+            - name: RINCON_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sentinel-secrets
+                  key: RINCON_PASSWORD
+            - name: SERVICE_ENDPOINT
+              value: http://core.sentinel.svc.cluster.local:9999
+            - name: SERVICE_HEALTH_CHECK
+              value: http://core.sentinel.svc.cluster.local:9999/core/ping
+            # Empty by default; set to a comma-separated entity ID list to
+            # bootstrap users into the Admins group on each boot.
+            - name: ADMIN_ENTITY_IDS
+              value: ""
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: core
+  namespace: sentinel
+spec:
+  selector:
+    app: core
+  ports:
+    - port: 9999
+      targetPort: 9999

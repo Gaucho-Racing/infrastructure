@@ -1,0 +1,40 @@
+# In-cluster handle for the external Postgres EC2.
+#
+# The Service has no selector, so kube-controller-manager doesn't generate
+# endpoints from pods. Instead we declare an EndpointSlice manually,
+# pointing at the postgres EC2's *private* IP — pods then connect via
+# direct VPC routing (ENI → ENI) rather than hairpinning out through the
+# IGW to the EIP.
+#
+# The private IP is stable: the instance has lifecycle.ignore_changes for
+# user_data + ami, and the EBS volume has prevent_destroy = true, so the
+# instance rarely gets replaced. If it ever does, update this file.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: sentinel
+spec:
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
+---
+apiVersion: discovery.k8s.io/v1
+kind: EndpointSlice
+metadata:
+  name: postgres
+  namespace: sentinel
+  labels:
+    # Required label — links the slice to the parent Service by name.
+    kubernetes.io/service-name: postgres
+addressType: IPv4
+ports:
+  - name: postgres
+    port: 5432
+    protocol: TCP
+endpoints:
+  - addresses:
+      - 10.0.8.119
