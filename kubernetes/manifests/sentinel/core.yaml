@@ -13,6 +13,17 @@ spec:
       labels:
         app: core
     spec:
+      # Force replicas onto different nodes. With DoNotSchedule, a second
+      # pod stays Pending if only one node is free — Karpenter then
+      # provisions a second spot node to satisfy the constraint. Result:
+      # a single spot interruption only takes out 1 of 2 replicas.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: core
       containers:
         - name: core
           # Tag is set by kustomization.yaml's images block.

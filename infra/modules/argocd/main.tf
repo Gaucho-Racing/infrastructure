@@ -29,6 +29,13 @@ resource "helm_release" "argocd" {
       global = {
         # Used by Ingress if/when we enable it. Harmless until then.
         domain = var.domain
+        # Pin every ArgoCD component to the on-demand baseline NodePool.
+        # GitOps needs to stay up to drive recovery when the spot pool
+        # churns; on-demand is more expensive but worth it for the
+        # control plane. See kubernetes/manifests/on-demand-nodepool/.
+        nodeSelector = {
+          "capacity-type" = "on-demand-baseline"
+        }
       }
       configs = {
         params = {

@@ -4,7 +4,7 @@ metadata:
   name: web
   namespace: sentinel
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: web
@@ -13,6 +13,14 @@ spec:
       labels:
         app: web
     spec:
+      # One replica per node — see comment in core.yaml.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: web
       containers:
         - name: web
           # Tag is set by kustomization.yaml's images block.
