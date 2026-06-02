@@ -29,11 +29,14 @@ module "eks" {
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnet_ids
 
-  # admin-cli is the cluster creator and is already granted admin via
-  # enable_cluster_creator_admin_permissions inside the module. Don't
-  # re-list it here — duplicates a single principal_arn across two
-  # access entries and EKS rejects it.
-  cluster_admin_principals = []
+  # Both the local IAM user (admin-cli) and the CI OIDC role need cluster
+  # admin. Listed explicitly so the set is stable regardless of who runs
+  # terraform — the module's auto-cluster-creator flag is disabled to
+  # avoid the entry flipping between appliers.
+  cluster_admin_principals = [
+    "arn:aws:iam::211125506628:user/admin-cli",
+    "arn:aws:iam::211125506628:role/github-actions-terraform",
+  ]
 }
 
 module "argocd" {
