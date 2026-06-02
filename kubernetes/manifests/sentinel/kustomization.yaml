@@ -11,8 +11,8 @@
 # tag push.) That edit only touches this file — the Deployment YAMLs
 # stay unchanged, so the diff in a release PR is one block.
 #
-# rincon and kerbecs aren't in the override list — they're on independent
-# version streams and stay on :latest until we have a reason to pin.
+# rincon and kerbecs are on independent version streams from the
+# sentinel services — bump them separately when there's a reason to.
 
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
@@ -38,3 +38,7 @@ images:
     newTag: 5.1.0
   - name: ghcr.io/gaucho-racing/sentinel-web
     newTag: 5.1.0
+  - name: bk1031/rincon
+    newTag: 2.2.0
+  - name: bk1031/kerbecs
+    newTag: 3.0.0
