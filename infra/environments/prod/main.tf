@@ -161,5 +161,5 @@ resource "cloudflare_ruleset" "ssl_overrides" {
 # has run and the resource is fully terraform-owned.
 import {
   to = cloudflare_ruleset.ssl_overrides
-  id = "zones/${data.cloudflare_zone.gauchoracing.id}/2089fec32272445a802ce92ade4b0350"
+  id = "zones/${data.cloudflare_zone.gauchoracing.id}/358ead87ac2f47668378942a2a23b7d7"
 }
