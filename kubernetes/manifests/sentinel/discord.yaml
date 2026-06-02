@@ -53,7 +53,7 @@ spec:
             - name: DISCORD_GUILD
               value: "756738476887638107"
             - name: DISCORD_PREFIX
-              value: "d!"
+              value: "!"
             - name: WEB_BASE_URL
               value: https://sentinel-v5.gauchoracing.com
             - name: DISCORD_TOKEN
