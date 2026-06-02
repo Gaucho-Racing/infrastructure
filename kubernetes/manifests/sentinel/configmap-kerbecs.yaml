@@ -39,7 +39,10 @@ data:
 
     providers:
       static:
-        watch: false
+        # Hot-reload the config on ConfigMap updates (kerbecs >= 3.1.0). The
+        # watcher reacts to the kubelet ..data symlink swap, so route changes
+        # apply without restarting the pod.
+        watch: true
 
     upstreams:
       core:
