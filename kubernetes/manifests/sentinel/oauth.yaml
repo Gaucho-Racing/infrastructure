@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: oauth
-          image: ghcr.io/gaucho-racing/sentinel-oauth:latest
+          image: ghcr.io/gaucho-racing/sentinel-oauth:5.1.0
           ports:
             - containerPort: 9997
           env:
