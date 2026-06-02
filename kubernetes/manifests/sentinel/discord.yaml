@@ -24,7 +24,7 @@ spec:
             - name: PORT
               value: "9998"
             - name: DATABASE_HOST
-              value: gr-postgres.gauchoracing.com
+              value: postgres
             - name: DATABASE_PORT
               value: "5432"
             - name: DATABASE_USER
