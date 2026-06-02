@@ -1,7 +1,8 @@
 # Spot-preferred NodePool. Mirrors the AWS-managed `general-purpose`
-# pool's instance constraints (c/m/r categories, gen > 4, amd64/linux)
-# but allows spot capacity. Spot+on-demand together means Karpenter
-# picks spot when available (cheaper) and on-demand when not.
+# pool's instance constraints (c/m/r categories, gen > 4) but allows
+# spot capacity and arm64 (Graviton) instances for extra savings.
+# Spot+on-demand together means Karpenter picks spot when available
+# (cheaper) and on-demand when not.
 #
 # weight=100 makes this the preferred pool over `general-purpose`
 # (default weight 0). Both reference the same AWS-managed NodeClass.
@@ -12,6 +13,10 @@ metadata:
   name: spot
 spec:
   weight: 100
+  # Pool-wide CPU cap. Safety net against runaway pod creation
+  # provisioning the whole AWS region. Bump as the cluster grows.
+  limits:
+    cpu: "64"
   template:
     spec:
       requirements:
@@ -24,9 +29,18 @@ spec:
         - key: eks.amazonaws.com/instance-generation
           operator: Gt
           values: ["4"]
+        # Per-instance CPU ceiling. Tiny workloads shouldn't ever need
+        # a 96-vCPU node; bound it so a misconfigured pod request can't
+        # spin up something absurd.
+        - key: eks.amazonaws.com/instance-cpu
+          operator: Lt
+          values: ["16"]
+        # arm64 (Graviton) is ~20% cheaper than amd64 at the same spec
+        # AND has a separate spot pool, improving capacity availability.
+        # Sentinel images are multi-arch; ArgoCD's are too.
         - key: kubernetes.io/arch
           operator: In
-          values: ["amd64"]
+          values: ["amd64", "arm64"]
         - key: kubernetes.io/os
           operator: In
           values: ["linux"]
@@ -34,10 +48,14 @@ spec:
         group: eks.amazonaws.com
         kind: NodeClass
         name: default
-      expireAfter: 336h
+      # Force node recycling weekly — picks up new AMIs + kernel patches.
+      expireAfter: 168h
       terminationGracePeriod: 24h
   disruption:
     consolidationPolicy: WhenEmptyOrUnderutilized
     consolidateAfter: 30s
     budgets:
-      - nodes: "10%"
+      # Absolute count instead of percent. With only 1-2 nodes total,
+      # "10%" rounds to 0, which blocks all consolidation. "1" means
+      # Karpenter can recycle one node at a time.
+      - nodes: "1"
