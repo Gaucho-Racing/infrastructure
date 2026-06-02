@@ -50,10 +50,10 @@ spec:
               value: http://core.sentinel.svc.cluster.local:9999
             - name: SERVICE_HEALTH_CHECK
               value: http://core.sentinel.svc.cluster.local:9999/core/ping
-            # Empty by default; set to a comma-separated entity ID list to
-            # bootstrap users into the Admins group on each boot.
+            # Comma-separated entity IDs to bootstrap into the Admins
+            # group on each boot. Idempotent — safe to leave as-is.
             - name: ADMIN_ENTITY_IDS
-              value: ""
+              value: "ent_01kt38a23b9ya1w5x4t9dasd86"
 ---
 apiVersion: v1
 kind: Service
