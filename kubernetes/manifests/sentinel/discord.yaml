@@ -4,6 +4,8 @@ metadata:
   name: discord
   namespace: sentinel
 spec:
+  # Stays at 1 — multiple replicas would each open their own gateway
+  # connection and double-process every Discord event.
   replicas: 1
   selector:
     matchLabels:
@@ -19,6 +21,13 @@ spec:
           image: ghcr.io/gaucho-racing/sentinel-discord:latest
           ports:
             - containerPort: 9998
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
           env:
             - name: ENV
               value: PROD
