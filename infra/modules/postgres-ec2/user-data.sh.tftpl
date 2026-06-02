@@ -32,12 +32,15 @@ mkdir -p /var/lib/postgresql/data
 chown 999:999 /var/lib/postgresql/data
 
 # --restart=always survives reboots since docker.service is enabled.
+# --network=host skips the docker-proxy NAT — nothing else on this box
+# uses 5432, so we get direct kernel networking with no port mapping
+# layer.
 # First boot: empty data dir → entrypoint runs initdb, sets password,
 # creates POSTGRES_DB. Subsequent boots: detects PG_VERSION, just starts.
 docker run -d \
   --name postgres \
   --restart=always \
-  -p 5432:5432 \
+  --network=host \
   -v /var/lib/postgresql/data:/var/lib/postgresql/data \
   -e POSTGRES_PASSWORD='${postgres_password}' \
   -e POSTGRES_DB='${db_name}' \
