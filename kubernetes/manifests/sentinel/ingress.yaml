@@ -14,6 +14,8 @@ metadata:
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443}]'
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/backend-protocol: HTTP
+    # Share the gr-prod ALB with other Ingresses — see argocd-server-ingress.
+    alb.ingress.kubernetes.io/group.name: gr-prod
 
     external-dns.alpha.kubernetes.io/hostname: sentinel-v5.gauchoracing.com
     external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
