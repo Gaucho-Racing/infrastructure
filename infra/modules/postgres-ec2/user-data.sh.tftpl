@@ -25,23 +25,26 @@ mount /var/lib/postgresql
 dnf install -y docker
 systemctl enable --now docker
 
-# Bind-mounted data dir must be owned by the container's postgres uid
-# (999:999 in the official image). The host doesn't need its own postgres
-# user — Docker handles everything.
-mkdir -p /var/lib/postgresql/data
-chown 999:999 /var/lib/postgresql/data
+# Postgres 18+ images expect a single bind mount at /var/lib/postgresql
+# and store data in a major-version subdir (/var/lib/postgresql/18/docker)
+# so pg_upgrade --link works across container versions without crossing
+# mount boundaries. Mount the EBS volume's root, not /data, and let the
+# image manage the layout inside. Bind-mount must be owned by the
+# container's postgres uid (999:999 in the official image).
+chown 999:999 /var/lib/postgresql
 
 # --restart=always survives reboots since docker.service is enabled.
 # --network=host skips the docker-proxy NAT — nothing else on this box
 # uses 5432, so we get direct kernel networking with no port mapping
 # layer.
-# First boot: empty data dir → entrypoint runs initdb, sets password,
-# creates POSTGRES_DB. Subsequent boots: detects PG_VERSION, just starts.
+# First boot: empty dir → entrypoint runs initdb, sets password, creates
+# POSTGRES_DB. Subsequent boots: detects existing major-version subdir
+# and just starts.
 docker run -d \
   --name postgres \
   --restart=always \
   --network=host \
-  -v /var/lib/postgresql/data:/var/lib/postgresql/data \
+  -v /var/lib/postgresql:/var/lib/postgresql \
   -e POSTGRES_PASSWORD='${postgres_password}' \
   -e POSTGRES_DB='${db_name}' \
   postgres:18
