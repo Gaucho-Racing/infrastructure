@@ -1,0 +1,138 @@
+# Kerbecs gateway routing rules. Mounted into the kerbecs pod at
+# /etc/kerbecs/kerbecs.yaml — KERBECS_CONFIG points the binary at it.
+#
+# Upstreams reference the in-cluster Services by name (cross-namespace
+# resolution not needed since everything lives in `sentinel`). The web
+# upstream points at port 80 (the nginx-served prod build), unlike the
+# docker-compose dev setup where vite serves on 5173.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kerbecs-config
+  namespace: sentinel
+data:
+  kerbecs.yaml: |
+    gateway:
+      name: sentinel-gateway
+      version: 0.1.0
+      env: ${ENV:PROD}
+      timeouts:
+        dial: 5s
+        headers: 30s
+        idle: 50s
+        overall: 0
+
+    listeners:
+      gateway:
+        port: "10310"
+        cors:
+          enabled: true
+          allowed_origins: ["*"]
+          allow_credentials: false
+      admin:
+        port: "10300"
+        auth:
+          type: basic
+          username: ${KERBECS_USER:admin}
+          password: ${KERBECS_PASSWORD:admin}
+
+    providers:
+      static:
+        watch: false
+
+    upstreams:
+      core:
+        name: sentinel-core
+        version: 0.1.0
+        instances:
+          - http://core:9999
+
+      oauth:
+        name: sentinel-oauth
+        version: 0.1.0
+        instances:
+          - http://oauth:9997
+
+      discord:
+        name: sentinel-discord
+        version: 0.1.0
+        instances:
+          - http://discord:9998
+
+      web:
+        name: sentinel-web
+        version: 0.1.0
+        instances:
+          - http://web:80
+
+    routes:
+      - name: core-internal
+        match:
+          path: /api/core/*
+        upstream: core
+        rewrite:
+          strip_prefix: /api
+        envelope: passthrough
+
+      - name: core-users
+        match:
+          path: /api/users/*
+        upstream: core
+        rewrite:
+          strip_prefix: /api
+        envelope: passthrough
+
+      - name: core-applications
+        match:
+          path: /api/applications/*
+        upstream: core
+        rewrite:
+          strip_prefix: /api
+        envelope: passthrough
+
+      - name: core-groups
+        match:
+          path: /api/groups/*
+        upstream: core
+        rewrite:
+          strip_prefix: /api
+        envelope: passthrough
+
+      - name: core-entities
+        match:
+          path: /api/entities/*
+        upstream: core
+        rewrite:
+          strip_prefix: /api
+        envelope: passthrough
+
+      - name: oauth
+        match:
+          path: /api/oauth/*
+        upstream: oauth
+        rewrite:
+          strip_prefix: /api
+        envelope: passthrough
+
+      - name: auth
+        match:
+          path: /api/auth/*
+        upstream: oauth
+        rewrite:
+          strip_prefix: /api
+        envelope: passthrough
+
+      - name: discord
+        match:
+          path: /api/discord/*
+        upstream: discord
+        rewrite:
+          strip_prefix: /api
+        envelope: passthrough
+
+      - name: web-frontend
+        match:
+          path: /*
+        upstream: web
+        envelope: passthrough

@@ -1,0 +1,53 @@
+# Service registry. Core/oauth/discord authenticate against it on
+# startup to register themselves and discover one another.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rincon
+  namespace: sentinel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rincon
+  template:
+    metadata:
+      labels:
+        app: rincon
+    spec:
+      containers:
+        - name: rincon
+          image: bk1031/rincon:latest
+          ports:
+            - containerPort: 10311
+          env:
+            - name: STORAGE_MODE
+              value: sql
+            - name: DB_DRIVER
+              value: postgres
+            - name: DB_HOST
+              value: gr-postgres.gauchoracing.com
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: postgres
+            - name: DB_NAME
+              value: sentinel
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sentinel-secrets
+                  key: POSTGRES_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rincon
+  namespace: sentinel
+spec:
+  selector:
+    app: rincon
+  ports:
+    - port: 10311
+      targetPort: 10311
