@@ -2,9 +2,25 @@
 # over self-management once the root Application (kubernetes/bootstrap/root.yaml)
 # is kubectl-apply'd. From that point, even ArgoCD upgrades happen via Git.
 #
-# The Helm release is intentionally minimal here. App-level config (RBAC,
-# SSO, notification rules, projects) gets layered on by ArgoCD itself
-# reading from this repo, not by terraform.
+# SSO (Sentinel OIDC) and RBAC live in the chart values below so a single
+# owner (this Helm release) manages argocd-cm / argocd-rbac-cm — managing
+# those ConfigMaps from both Helm and a GitOps Application makes them flap.
+#
+# Two manual prerequisites before SSO works (neither belongs in Git):
+#
+#   1. Register the ArgoCD application in Sentinel:
+#        - client_id: argocd  (must match var.oidc_client_id)
+#        - redirect_uri: https://<var.domain>/auth/callback
+#        - link the "Admins" group (and any others you want visible) to the
+#          app so they appear in the groups claim; optionally mark a group
+#          "required" to gate who can log in at all (Sentinel access gate).
+#
+#   2. Create the OIDC client secret in-cluster (referenced by oidc.config
+#      as $argocd-sentinel-oidc:oidc.clientSecret — kept out of Git/state):
+#        kubectl -n argocd create secret generic argocd-sentinel-oidc \
+#          --from-literal=oidc.clientSecret='<secret-from-sentinel>'
+#        kubectl -n argocd label secret argocd-sentinel-oidc \
+#          app.kubernetes.io/part-of=argocd
 
 terraform {
   required_providers {
@@ -53,6 +69,29 @@ resource "helm_release" "argocd" {
           # TLS terminates at the ALB later; the server itself runs HTTP.
           # Saves having to deal with self-signed certs in-cluster.
           "server.insecure" = true
+        }
+        cm = {
+          # Public URL — used to build the OIDC redirect (…/auth/callback).
+          url = "https://${var.domain}"
+          # Sentinel OIDC. requestedScopes uses Sentinel's scope names:
+          # groups:read (NOT "groups") gates the groups claim, and
+          # offline_access requests a refresh token so sessions persist past
+          # the ~30m access-token TTL.
+          "oidc.config" = yamlencode({
+            name                   = "Sentinel"
+            issuer                 = var.oidc_issuer
+            clientID               = var.oidc_client_id
+            clientSecret           = "$argocd-sentinel-oidc:oidc.clientSecret"
+            requestedScopes        = ["openid", "profile", "email", "groups:read", "offline_access"]
+            requestedIDTokenClaims = { groups = { essential = true } }
+          })
+        }
+        rbac = {
+          # Sentinel emits group names in the groups claim, so policies key on
+          # the readable name. Everyone who can log in gets read-only; the
+          # admin group gets full access.
+          "policy.default" = "role:readonly"
+          "policy.csv"     = "g, ${var.admin_group}, role:admin"
         }
       }
     })
