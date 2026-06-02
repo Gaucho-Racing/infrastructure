@@ -130,9 +130,12 @@ resource "cloudflare_dns_record" "gr_postgres" {
 # that existing ruleset and add the sentinel-v5 rule alongside it.
 resource "cloudflare_ruleset" "ssl_overrides" {
   zone_id = data.cloudflare_zone.gauchoracing.id
-  name    = "Per-hostname SSL overrides"
-  kind    = "zone"
-  phase   = "http_config_settings"
+  # "default" is the canonical name Cloudflare assigns to a zone's
+  # entrypoint ruleset when one is created via the dashboard. Keep it
+  # to avoid forcing a replacement on import.
+  name  = "default"
+  kind  = "zone"
+  phase = "http_config_settings"
 
   rules = [
     {
