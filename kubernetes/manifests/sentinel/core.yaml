@@ -70,6 +70,11 @@ spec:
               value: http://core.sentinel.svc.cluster.local:9999
             - name: SERVICE_HEALTH_CHECK
               value: http://core.sentinel.svc.cluster.local:9999/core/ping
+            # OIDC issuer — the public base URL. MUST match oauth's ISSUER
+            # exactly; it's the `iss` claim stamped into signed tokens and the
+            # `issuer` advertised by the OAuth discovery document.
+            - name: ISSUER
+              value: https://sentinel-v5.gauchoracing.com
             # Comma-separated entity IDs to bootstrap into the Admins
             # group on each boot. Idempotent — safe to leave as-is.
             - name: ADMIN_ENTITY_IDS
