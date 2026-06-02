@@ -1,0 +1,28 @@
+# On-demand baseline NodePool. Hosts workloads that should survive
+# spot reclamation — primarily ArgoCD, so GitOps stays online to drive
+# recovery when spot churns. Stateless workloads keep landing on the
+# cheaper `spot` NodePool by default.
+#
+# A pod lands here by setting nodeSelector to `capacity-type: on-demand-baseline`
+# (label applied via the NodePool template).
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: on-demand-nodepool
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Gaucho-Racing/infrastructure.git
+    targetRevision: main
+    path: kubernetes/manifests/on-demand-nodepool
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

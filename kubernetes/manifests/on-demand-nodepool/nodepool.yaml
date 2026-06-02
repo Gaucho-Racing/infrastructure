@@ -1,0 +1,56 @@
+# Small on-demand baseline. Only pods that explicitly nodeSelect to
+# `capacity-type: on-demand-baseline` land here. Karpenter only
+# provisions when there's pending demand from those pods, so the pool
+# stays at 0 nodes until ArgoCD (or anything else we pin later) needs it.
+#
+# Sized small: c/m families only, max 2 vCPU. ArgoCD's footprint is tiny;
+# we want a node that's just big enough, not a backup capacity reserve.
+
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: on-demand
+spec:
+  # Lower weight than `spot` (100) so non-pinned workloads still land on
+  # spot. Pinned pods reach this pool via nodeSelector, not via weight.
+  weight: 50
+  limits:
+    cpu: "8"
+  template:
+    metadata:
+      # Node label that pinned pods will nodeSelect on.
+      labels:
+        capacity-type: on-demand-baseline
+    spec:
+      requirements:
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["on-demand"]
+        - key: eks.amazonaws.com/instance-category
+          operator: In
+          values: ["c", "m"]
+        - key: eks.amazonaws.com/instance-generation
+          operator: Gt
+          values: ["4"]
+        # Max 2 vCPU per node. ArgoCD's total need is <1 vCPU; we don't
+        # want Karpenter handing it a 4xlarge.
+        - key: eks.amazonaws.com/instance-cpu
+          operator: Lt
+          values: ["4"]
+        - key: kubernetes.io/arch
+          operator: In
+          values: ["amd64", "arm64"]
+        - key: kubernetes.io/os
+          operator: In
+          values: ["linux"]
+      nodeClassRef:
+        group: eks.amazonaws.com
+        kind: NodeClass
+        name: default
+      expireAfter: 168h
+      terminationGracePeriod: 24h
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 30s
+    budgets:
+      - nodes: "1"
