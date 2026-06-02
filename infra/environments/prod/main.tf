@@ -42,8 +42,10 @@ module "eks" {
 module "argocd" {
   source = "../../modules/argocd"
 
-  # No custom values for now. Domain placeholder until DNS lands.
   domain = "argocd.gauchoracing.com"
+
+  # Sentinel-generated client_id for the registered ArgoCD application.
+  oidc_client_id = "XwwQhdCWZ9Cn"
 
   depends_on = [module.eks]
 }
