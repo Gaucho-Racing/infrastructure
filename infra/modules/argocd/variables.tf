@@ -23,9 +23,8 @@ variable "oidc_issuer" {
 }
 
 variable "oidc_client_id" {
-  description = "client_id of the application registered in Sentinel for ArgoCD."
+  description = "client_id of the application registered in Sentinel for ArgoCD. Sentinel auto-generates this (a random 12-char string) at registration; it can't be named — copy the value from the registered app. Required."
   type        = string
-  default     = "argocd"
 }
 
 variable "admin_group" {
