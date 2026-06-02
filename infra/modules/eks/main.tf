@@ -21,10 +21,13 @@ module "eks" {
   # Private-only is more secure but adds a setup hop we don't need yet.
   endpoint_public_access = var.endpoint_public_access
 
-  # Adds the IAM principal running terraform (the OIDC role in CI, the
-  # user locally) as a cluster admin via an access entry. Without this
-  # only the IAM role that created the cluster has admin.
-  enable_cluster_creator_admin_permissions = true
+  # Disabled — this flag generates an access entry keyed by the *current*
+  # session's IAM identity, which differs between local (admin-cli) and CI
+  # (the OIDC role). principal_arn forces replacement, so each apply
+  # flipped the entry to whoever was running it, revoking the other's
+  # admin. Instead, list both principals explicitly in
+  # cluster_admin_principals below.
+  enable_cluster_creator_admin_permissions = false
 
   # Auto Mode. node_pools picks the AWS-managed default Karpenter pools
   # to enable; "general-purpose" is the workhorse, "system" is small
@@ -35,11 +38,11 @@ module "eks" {
     node_pools = var.node_pools
   }
 
-  # Cluster admin access entries for human operators. The IAM principal
-  # that runs `terraform apply` is already granted admin via
-  # enable_cluster_creator_admin_permissions above — these entries are
-  # for everyone else who needs kubectl access (e.g. a user who runs
-  # apply via CI but also needs to debug from their laptop).
+  # Cluster admin access entries. Must include every principal that
+  # needs kubectl access: human operators (admin-cli) and the CI role
+  # that runs terraform apply. Listed explicitly so the set of admins
+  # is stable across appliers — see the comment on
+  # enable_cluster_creator_admin_permissions above.
   access_entries = {
     for principal_arn in var.cluster_admin_principals :
     replace(principal_arn, "/[^a-zA-Z0-9-]/", "-") => {
