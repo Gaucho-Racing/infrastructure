@@ -41,4 +41,4 @@ images:
   - name: bk1031/rincon
     newTag: 2.2.0
   - name: bk1031/kerbecs
-    newTag: 3.0.0
+    newTag: 3.1.0
