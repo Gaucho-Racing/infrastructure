@@ -32,10 +32,6 @@ data "aws_ami" "al2023_arm64" {
   }
 }
 
-data "aws_vpc" "this" {
-  id = var.vpc_id
-}
-
 # Random password generated once and stored in state. Read via:
 #   terraform output -raw postgres_password
 # (which the caller uses to populate the k8s Secret.) Manage rotations
@@ -125,7 +121,6 @@ resource "aws_instance" "this" {
   user_data = templatefile("${path.module}/user-data.sh.tftpl", {
     postgres_password = random_password.postgres.result
     db_name           = var.db_name
-    vpc_cidr          = data.aws_vpc.this.cidr_block
   })
 
   # Re-rendering user-data shouldn't recreate the instance — the data
