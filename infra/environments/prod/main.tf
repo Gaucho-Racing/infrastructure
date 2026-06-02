@@ -116,3 +116,50 @@ resource "cloudflare_dns_record" "gr_postgres" {
   ttl     = 300
   proxied = false
 }
+
+# Per-hostname SSL/TLS override. The zone defaults to "Flexible" (CF
+# talks HTTP to origin), but our ALB-backed Ingresses run HTTPS-only
+# with the imported Origin CA cert — Flexible there causes a redirect
+# loop and Cloudflare returns 522. Listed per-hostname instead of
+# flipping the whole zone to Full strict, since other origins on
+# gauchoracing.com (legacy WordPress, etc.) still need Flexible.
+#
+# Cloudflare allows one entrypoint ruleset per (zone, phase). The
+# argocd rule was originally created via the dashboard, which Cloudflare
+# stores as an http_config_settings ruleset under the hood. We import
+# that existing ruleset and add the sentinel-v5 rule alongside it.
+resource "cloudflare_ruleset" "ssl_overrides" {
+  zone_id = data.cloudflare_zone.gauchoracing.id
+  name    = "Per-hostname SSL overrides"
+  kind    = "zone"
+  phase   = "http_config_settings"
+
+  rules = [
+    {
+      description = "Full strict for ArgoCD"
+      expression  = "(http.host eq \"argocd.gauchoracing.com\")"
+      action      = "set_config"
+      enabled     = true
+      action_parameters = {
+        ssl = "strict"
+      }
+    },
+    {
+      description = "Full strict for Sentinel v5"
+      expression  = "(http.host eq \"sentinel-v5.gauchoracing.com\")"
+      action      = "set_config"
+      enabled     = true
+      action_parameters = {
+        ssl = "strict"
+      }
+    },
+  ]
+}
+
+# One-off — picks up the existing argocd-only ruleset created via the
+# CF dashboard. Remove this import block in a follow-up PR once apply
+# has run and the resource is fully terraform-owned.
+import {
+  to = cloudflare_ruleset.ssl_overrides
+  id = "zones/${data.cloudflare_zone.gauchoracing.id}/2089fec32272445a802ce92ade4b0350"
+}
