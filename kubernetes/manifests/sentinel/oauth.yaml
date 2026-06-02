@@ -65,6 +65,11 @@ spec:
               value: http://oauth.sentinel.svc.cluster.local:9997
             - name: SERVICE_HEALTH_CHECK
               value: http://oauth.sentinel.svc.cluster.local:9997/oauth/ping
+            # OIDC issuer — the public base URL. MUST match core's ISSUER
+            # exactly; the discovery document's `issuer` and the `iss` claim in
+            # ID tokens have to be byte-identical for relying parties.
+            - name: ISSUER
+              value: https://sentinel-v5.gauchoracing.com
 ---
 apiVersion: v1
 kind: Service
