@@ -15,7 +15,8 @@ spec:
     spec:
       containers:
         - name: core
-          image: ghcr.io/gaucho-racing/sentinel-core:5.1.0
+          # Tag is set by kustomization.yaml's images block.
+          image: ghcr.io/gaucho-racing/sentinel-core:latest
           ports:
             - containerPort: 9999
           env:

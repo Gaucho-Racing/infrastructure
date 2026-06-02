@@ -15,7 +15,8 @@ spec:
     spec:
       containers:
         - name: discord
-          image: ghcr.io/gaucho-racing/sentinel-discord:5.1.0
+          # Tag is set by kustomization.yaml's images block.
+          image: ghcr.io/gaucho-racing/sentinel-discord:latest
           ports:
             - containerPort: 9998
           env:

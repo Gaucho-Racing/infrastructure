@@ -15,7 +15,8 @@ spec:
     spec:
       containers:
         - name: oauth
-          image: ghcr.io/gaucho-racing/sentinel-oauth:5.1.0
+          # Tag is set by kustomization.yaml's images block.
+          image: ghcr.io/gaucho-racing/sentinel-oauth:latest
           ports:
             - containerPort: 9997
           env:
