@@ -25,6 +25,7 @@ resources:
   - core.yaml
   - oauth.yaml
   - discord.yaml
+  - saml.yaml
   - web.yaml
   - ingress.yaml
 
@@ -34,6 +35,8 @@ images:
   - name: ghcr.io/gaucho-racing/sentinel-oauth
     newTag: 5.4.4
   - name: ghcr.io/gaucho-racing/sentinel-discord
+    newTag: 5.4.4
+  - name: ghcr.io/gaucho-racing/sentinel-saml
     newTag: 5.4.4
   - name: ghcr.io/gaucho-racing/sentinel-web
     newTag: 5.4.4
