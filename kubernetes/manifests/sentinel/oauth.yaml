@@ -52,19 +52,18 @@ spec:
                 secretKeyRef:
                   name: sentinel-secrets
                   key: POSTGRES_PASSWORD
-            - name: RINCON_ENDPOINT
-              value: http://rincon.sentinel.svc.cluster.local:10311
-            - name: RINCON_USER
+            # Resolve inter-service calls through the kerbecs gateway's admin
+            # API (replaces the rincon registry). Same admin creds the kerbecs
+            # deployment uses.
+            - name: KERBECS_ENDPOINT
+              value: http://kerbecs.sentinel.svc.cluster.local:10300
+            - name: KERBECS_USER
               value: admin
-            - name: RINCON_PASSWORD
+            - name: KERBECS_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: sentinel-secrets
-                  key: RINCON_PASSWORD
-            - name: SERVICE_ENDPOINT
-              value: http://oauth.sentinel.svc.cluster.local:9997
-            - name: SERVICE_HEALTH_CHECK
-              value: http://oauth.sentinel.svc.cluster.local:9997/oauth/ping
+                  key: KERBECS_PASSWORD
             # OIDC issuer — the public base URL. MUST match core's ISSUER
             # exactly; the discovery document's `issuer` and the `iss` claim in
             # ID tokens have to be byte-identical for relying parties.
