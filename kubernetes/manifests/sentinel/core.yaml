@@ -57,19 +57,6 @@ spec:
                 secretKeyRef:
                   name: sentinel-secrets
                   key: POSTGRES_PASSWORD
-            - name: RINCON_ENDPOINT
-              value: http://rincon.sentinel.svc.cluster.local:10311
-            - name: RINCON_USER
-              value: admin
-            - name: RINCON_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: sentinel-secrets
-                  key: RINCON_PASSWORD
-            - name: SERVICE_ENDPOINT
-              value: http://core.sentinel.svc.cluster.local:9999
-            - name: SERVICE_HEALTH_CHECK
-              value: http://core.sentinel.svc.cluster.local:9999/core/ping
             # OIDC issuer — the public base URL. MUST match oauth's ISSUER
             # exactly; it's the `iss` claim stamped into signed tokens and the
             # `issuer` advertised by the OAuth discovery document.
