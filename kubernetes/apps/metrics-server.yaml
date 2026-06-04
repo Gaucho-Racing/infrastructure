@@ -1,0 +1,41 @@
+# metrics-server: Kubelet resource metrics for `kubectl top` + HPA.
+#
+# Tracked by ArgoCD against the upstream Helm chart — bump the
+# targetRevision in a PR to upgrade. Chart versions:
+#   https://github.com/kubernetes-sigs/metrics-server/blob/master/charts/metrics-server/CHANGELOG.md
+#
+# EKS managed nodes + Karpenter both serve kubelet certs signed by the
+# cluster CA, so --kubelet-insecure-tls isn't needed. The preferred
+# address types are listed explicitly so metrics-server resolves nodes
+# by InternalIP first (the EKS-supported path) before falling back.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metrics-server
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://kubernetes-sigs.github.io/metrics-server
+    chart: metrics-server
+    targetRevision: 3.13.0
+    helm:
+      releaseName: metrics-server
+      values: |
+        defaultArgs:
+          - --cert-dir=/tmp
+          - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+          - --metric-resolution=15s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
