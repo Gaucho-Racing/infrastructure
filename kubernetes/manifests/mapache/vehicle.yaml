@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vehicle
+  namespace: mapache
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vehicle
+  template:
+    metadata:
+      labels:
+        app: vehicle
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: vehicle
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: vehicle
+          image: ghcr.io/gaucho-racing/mapache/vehicle:latest
+          ports:
+            - containerPort: 7003
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            - name: ENV
+              value: PROD
+            - name: PORT
+              value: "7003"
+            - name: DATABASE_HOST
+              value: postgres.mapache.svc.cluster.local
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_USER
+              value: postgres
+            - name: DATABASE_NAME
+              value: mapache
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: DATABASE_PASSWORD
+            - name: KERBECS_ENDPOINT
+              value: http://kerbecs.mapache.svc.cluster.local:10300
+            - name: KERBECS_USER
+              value: admin
+            - name: KERBECS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: KERBECS_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vehicle
+  namespace: mapache
+spec:
+  selector:
+    app: vehicle
+  ports:
+    - port: 7003
+      targetPort: 7003

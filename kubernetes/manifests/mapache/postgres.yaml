@@ -1,0 +1,17 @@
+# In-cluster handle for the gr-postgres EC2 (the same instance that
+# backs sentinel — see ../sentinel/postgres.yaml for the rationale).
+# Pods dial postgres.mapache.svc.cluster.local → AWS split-horizon DNS
+# returns the private IP from inside the VPC, so traffic stays on the
+# private ENI instead of hairpinning out to the IGW.
+#
+# The mapache database lives on this same server alongside sentinel; the
+# two are isolated by DB, not by instance.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: mapache
+spec:
+  type: ExternalName
+  externalName: ec2-52-32-150-44.us-west-2.compute.amazonaws.com

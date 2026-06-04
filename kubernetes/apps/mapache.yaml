@@ -1,0 +1,51 @@
+# Mapache: telemetry + analytics stack.
+#
+#   dashboard          (SPA)
+#       │
+#       ▼
+#   kerbecs (gateway) → auth / vehicle / gr26 / query / foreman
+#       │                              │
+#       │                              ▼
+#       │                       gr-mqtt EC2 (1883)  ← on-car TCM publishes here
+#       ▼
+#   gr-postgres EC2 (mapache DB, same instance as sentinel)
+#
+# Manual one-time bootstrap after this Application first syncs — the
+# secret references in every Deployment depend on these keys existing:
+#
+#   kubectl -n mapache create secret generic mapache-secrets \
+#     --from-literal=DATABASE_PASSWORD="$(cd ../../infrastructure/infra/environments/prod && terraform output -raw postgres_password)" \
+#     --from-literal=MQTT_PASSWORD="$(cd ../../infrastructure/infra/environments/prod && terraform output -raw mqtt_password)" \
+#     --from-literal=KERBECS_PASSWORD=... \
+#     --from-literal=SENTINEL_CLIENT_SECRET=... \
+#     --from-literal=SENTINEL_TOKEN=... \
+#     --from-literal=AWS_ACCESS_KEY_ID=... \
+#     --from-literal=AWS_SECRET_ACCESS_KEY=...
+#
+# The mapache database needs to exist on gr-postgres before pods come
+# up — connect once with the postgres user and run `CREATE DATABASE
+# mapache;`. AutoMigrate in the Go services creates the rest.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mapache
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Gaucho-Racing/infrastructure.git
+    targetRevision: main
+    path: kubernetes/manifests/mapache
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: mapache
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

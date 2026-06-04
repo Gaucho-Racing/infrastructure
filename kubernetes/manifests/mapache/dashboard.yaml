@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard
+  namespace: mapache
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dashboard
+  template:
+    metadata:
+      labels:
+        app: dashboard
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: dashboard
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: dashboard
+          # Tag is set by kustomization.yaml's images block.
+          image: ghcr.io/gaucho-racing/mapache/dashboard:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard
+  namespace: mapache
+spec:
+  selector:
+    app: dashboard
+  ports:
+    - port: 80
+      targetPort: 80
