@@ -40,6 +40,15 @@ resource "random_password" "mqtt" {
   special = false
 }
 
+# Separate credential for the on-car TCM so a compromised car can't
+# masquerade as the cluster-side gr26 (and vice-versa). NanoMQ has no
+# per-topic ACLs configured, so this is blast-radius limiting only —
+# revoke either user by dropping its line from nanomq_pwd.conf.
+resource "random_password" "mqtt_tcm26" {
+  length  = 32
+  special = false
+}
+
 resource "aws_security_group" "this" {
   name        = var.name
   description = "NanoMQ for ${var.name}"
@@ -98,9 +107,11 @@ resource "aws_instance" "this" {
   }
 
   user_data = templatefile("${path.module}/user-data.sh.tftpl", {
-    nanomq_version = var.nanomq_version
-    mqtt_user      = var.mqtt_user
-    mqtt_password  = random_password.mqtt.result
+    nanomq_version      = var.nanomq_version
+    mqtt_user           = var.mqtt_user
+    mqtt_password       = random_password.mqtt.result
+    mqtt_user_tcm26     = var.mqtt_user_tcm26
+    mqtt_password_tcm26 = random_password.mqtt_tcm26.result
   })
 
   # Don't recycle the instance on user-data churn. nanomq carries no

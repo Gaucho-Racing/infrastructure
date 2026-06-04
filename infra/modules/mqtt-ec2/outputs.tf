@@ -24,12 +24,23 @@ output "security_group_id" {
 }
 
 output "mqtt_user" {
-  description = "Configured MQTT username. Pair with mqtt_password to authenticate."
+  description = "MQTT username for the in-cluster gr26 service. Pair with mqtt_password."
   value       = var.mqtt_user
 }
 
 output "mqtt_password" {
-  description = "Generated MQTT password. Read via `terraform output -raw mqtt_password` and put into the k8s Secret + on-car TCM config."
+  description = "Generated MQTT password for the in-cluster gr26 user. Read via `terraform output -raw mqtt_password` and put into the k8s Secret."
   value       = random_password.mqtt.result
+  sensitive   = true
+}
+
+output "mqtt_user_tcm26" {
+  description = "MQTT username for the on-car TCM-26. Pair with mqtt_password_tcm26."
+  value       = var.mqtt_user_tcm26
+}
+
+output "mqtt_password_tcm26" {
+  description = "Generated MQTT password for the on-car TCM. Read via `terraform output -raw mqtt_password_tcm26` and put into the TCM's mqtt container config."
+  value       = random_password.mqtt_tcm26.result
   sensitive   = true
 }
