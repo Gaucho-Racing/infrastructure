@@ -4,7 +4,7 @@ metadata:
   name: auth
   namespace: mapache
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: auth
@@ -60,10 +60,14 @@ spec:
                 secretKeyRef:
                   name: mapache-secrets
                   key: KERBECS_PASSWORD
+            # Sentinel v5 (the k8s deployment) is up, but the OAuth client +
+            # JWKS for mapache haven't been migrated over yet. Keep pointing
+            # at the legacy hosts until that cutover happens, then bump both
+            # to https://sentinel-v5.gauchoracing.com.
             - name: SENTINEL_URL
-              value: https://sentinel-v5.gauchoracing.com
+              value: https://sentinel-api.gauchoracing.com
             - name: SENTINEL_JWKS_URL
-              value: https://sentinel-v5.gauchoracing.com/.well-known/jwks.json
+              value: https://sso.gauchoracing.com/.well-known/jwks.json
             - name: SENTINEL_CLIENT_ID
               value: z6V9NREjMFhf
             - name: SENTINEL_CLIENT_SECRET

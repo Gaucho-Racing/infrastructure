@@ -4,7 +4,7 @@ metadata:
   name: query
   namespace: mapache
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: query
@@ -59,10 +59,12 @@ spec:
                 secretKeyRef:
                   name: mapache-secrets
                   key: KERBECS_PASSWORD
+            # See auth.yaml — keep on legacy Sentinel until the mapache
+            # cutover happens, then bump both to sentinel-v5.gauchoracing.com.
             - name: SENTINEL_URL
-              value: https://sentinel-v5.gauchoracing.com
+              value: https://sentinel-api.gauchoracing.com
             - name: SENTINEL_JWKS_URL
-              value: https://sentinel-v5.gauchoracing.com/.well-known/jwks.json
+              value: https://sso.gauchoracing.com/.well-known/jwks.json
             - name: SENTINEL_CLIENT_ID
               value: z6V9NREjMFhf
 ---
