@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: foreman
+  namespace: mapache
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: foreman
+  template:
+    metadata:
+      labels:
+        app: foreman
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app: foreman
+              topologyKey: kubernetes.io/hostname
+      containers:
+        - name: foreman
+          image: ghcr.io/gaucho-racing/mapache/foreman:latest
+          ports:
+            - containerPort: 7011
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            - name: ENV
+              value: PROD
+            - name: PORT
+              value: "7011"
+            - name: DATABASE_HOST
+              value: postgres.mapache.svc.cluster.local
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_USER
+              value: postgres
+            - name: DATABASE_NAME
+              value: mapache
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: DATABASE_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: foreman
+  namespace: mapache
+spec:
+  selector:
+    app: foreman
+  ports:
+    - port: 7011
+      targetPort: 7011
