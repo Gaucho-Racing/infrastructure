@@ -54,7 +54,13 @@ output "mqtt_public_ip" {
 }
 
 output "mqtt_password" {
-  description = "Generated MQTT password (user: gr26). Read with `terraform output -raw mqtt_password`."
+  description = "Generated MQTT password for the in-cluster gr26 user. Read with `terraform output -raw mqtt_password` → mapache-secrets/MQTT_PASSWORD."
   value       = module.mqtt.mqtt_password
+  sensitive   = true
+}
+
+output "mqtt_password_tcm26" {
+  description = "Generated MQTT password for the on-car tcm26 user. Read with `terraform output -raw mqtt_password_tcm26` → on-car TCM mqtt container config."
+  value       = module.mqtt.mqtt_password_tcm26
   sensitive   = true
 }
