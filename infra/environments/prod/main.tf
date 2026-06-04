@@ -119,6 +119,40 @@ resource "cloudflare_dns_record" "gr_postgres" {
   proxied = false
 }
 
+# NanoMQ on EC2 — same shape as gr-postgres. mapache/gr26 subscribes
+# from inside the cluster; the on-car TCM publishes from a cellular IP,
+# so this needs a public EIP + open ingress. The 32-char random password
+# is the only gate.
+#
+# Read the password and populate the k8s Secret + on-car TCM with:
+#   kubectl -n mapache create secret generic mapache-secrets \
+#     --from-literal=MQTT_PASSWORD="$(terraform output -raw mqtt_password)" \
+#     ...
+module "mqtt" {
+  source = "../../modules/mqtt-ec2"
+
+  name              = "gr-mqtt"
+  vpc_id            = module.vpc.vpc_id
+  subnet_id         = module.vpc.public_subnet_ids[0]
+  availability_zone = "us-west-2a"
+
+  associate_public_ip = true
+  admin_cidr_blocks   = ["0.0.0.0/0"]
+
+  allowed_security_group_ids = [
+    module.eks.node_security_group_id,
+  ]
+}
+
+resource "cloudflare_dns_record" "gr_mqtt" {
+  zone_id = data.cloudflare_zone.gauchoracing.id
+  name    = "gr-mqtt"
+  type    = "A"
+  content = module.mqtt.public_ip
+  ttl     = 300
+  proxied = false
+}
+
 # Per-hostname SSL/TLS override. The zone defaults to "Flexible" (CF
 # talks HTTP to origin), but our ALB-backed Ingresses run HTTPS-only
 # with the imported Origin CA cert — Flexible there causes a redirect

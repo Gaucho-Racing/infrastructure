@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euxo pipefail
+
+# AL2023 ships docker in its default repo so no extra package gymnastics.
+dnf install -y docker
+systemctl enable --now docker
+
+# nanomq.conf — minimal config that overrides only the listener + auth
+# block. Everything else falls back to image defaults. Auth disables
+# anonymous so the public 1883 ingress can't be abused; credentials live
+# in nanomq_pwd.conf alongside.
+cat >/etc/nanomq.conf <<'EOF'
+listeners.tcp {
+  bind = "0.0.0.0:1883"
+}
+
+auth {
+  allow_anonymous = false
+  no_match = deny
+  deny_action = disconnect
+  password = {include "/etc/nanomq_pwd.conf"}
+}
+EOF
+
+cat >/etc/nanomq_pwd.conf <<EOF
+"${mqtt_user}": "${mqtt_password}"
+EOF
+chmod 600 /etc/nanomq_pwd.conf
+
+# --network=host skips the docker-proxy NAT — nothing else on this box
+# uses 1883. --restart=always survives reboots since docker.service is
+# enabled.
+docker run -d \
+  --name nanomq \
+  --restart=always \
+  --network=host \
+  -v /etc/nanomq.conf:/etc/nanomq.conf:ro \
+  -v /etc/nanomq_pwd.conf:/etc/nanomq_pwd.conf:ro \
+  emqx/nanomq:${nanomq_version} --conf /etc/nanomq.conf

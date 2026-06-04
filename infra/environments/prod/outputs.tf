@@ -42,3 +42,19 @@ output "postgres_password" {
   value       = module.postgres.postgres_password
   sensitive   = true
 }
+
+output "mqtt_private_ip" {
+  description = "Private IP of the NanoMQ EC2. In-cluster pods can connect to this on 1883."
+  value       = module.mqtt.private_ip
+}
+
+output "mqtt_public_ip" {
+  description = "Public IP of the NanoMQ EC2 (EIP). The on-car TCM publishes here on 1883, or use gr-mqtt.gauchoracing.com."
+  value       = module.mqtt.public_ip
+}
+
+output "mqtt_password" {
+  description = "Generated MQTT password (user: gr26). Read with `terraform output -raw mqtt_password`."
+  value       = module.mqtt.mqtt_password
+  sensitive   = true
+}
