@@ -78,7 +78,7 @@ spec:
             - name: FOREMAN_ENDPOINT
               value: http://foreman.mapache.svc.cluster.local:7011
             - name: NUM_WORKERS
-              value: "1"
+              value: "4"
             - name: SHELTER_S3_BUCKET
               value: gaucho-racing
             - name: SHELTER_S3_REGION
