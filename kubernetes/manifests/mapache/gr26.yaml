@@ -25,6 +25,16 @@ spec:
       labels:
         app: gr26
     spec:
+      # Spread across at least 2 nodes (minDomains) but tolerate skew
+      # up to 1 (so 3 replicas → [2,1], not forced [1,1,1]).
+      topologySpreadConstraints:
+        - maxSkew: 1
+          minDomains: 2
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: gr26
       containers:
         - name: gr26
           image: ghcr.io/gaucho-racing/mapache/gr26:latest
