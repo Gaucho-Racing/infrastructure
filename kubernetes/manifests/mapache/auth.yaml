@@ -13,13 +13,16 @@ spec:
       labels:
         app: auth
     spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchLabels:
-                  app: auth
-              topologyKey: kubernetes.io/hostname
+      # Spread across at least 2 nodes (minDomains) but tolerate skew
+      # up to 1 (so 3 replicas → [2,1], not forced [1,1,1]).
+      topologySpreadConstraints:
+        - maxSkew: 1
+          minDomains: 2
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: auth
       containers:
         - name: auth
           # Tag is set by kustomization.yaml's images block.

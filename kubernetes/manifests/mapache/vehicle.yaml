@@ -13,13 +13,16 @@ spec:
       labels:
         app: vehicle
     spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchLabels:
-                  app: vehicle
-              topologyKey: kubernetes.io/hostname
+      # Spread across at least 2 nodes (minDomains) but tolerate skew
+      # up to 1 (so 3 replicas → [2,1], not forced [1,1,1]).
+      topologySpreadConstraints:
+        - maxSkew: 1
+          minDomains: 2
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: vehicle
       containers:
         - name: vehicle
           image: ghcr.io/gaucho-racing/mapache/vehicle:latest

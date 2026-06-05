@@ -17,16 +17,16 @@ spec:
       labels:
         app: kerbecs
     spec:
-      # Hard anti-affinity — two app=kerbecs pods cannot share a node.
-      # Same pattern as sentinel; Karpenter provisions a second node
-      # when needed.
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchLabels:
-                  app: kerbecs
-              topologyKey: kubernetes.io/hostname
+      # Spread across at least 2 nodes (minDomains) but tolerate skew
+      # up to 1 (so 3 replicas → [2,1], not forced [1,1,1]).
+      topologySpreadConstraints:
+        - maxSkew: 1
+          minDomains: 2
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: kerbecs
       containers:
         - name: kerbecs
           image: bk1031/kerbecs:latest
