@@ -71,7 +71,8 @@ module "origin_cert" {
 
 # Postgres on EC2. Lives in the EKS VPC so pods reach it via private IP;
 # SG-locked to traffic originating from the EKS node SG so nothing outside
-# the cluster can connect. ARM/Graviton (t4g.medium) for cost.
+# the cluster can connect. ARM/Graviton t4g.large (8 GiB) — bumped from
+# t4g.medium after the OOM under NUM_WORKERS=4 ingest pressure.
 #
 # Generated password is in TF state — read with:
 #   terraform output -raw postgres_password
@@ -87,7 +88,7 @@ module "postgres" {
   subnet_id         = module.vpc.public_subnet_ids[0]
   availability_zone = "us-west-2a"
 
-  instance_type       = "t4g.medium"
+  instance_type       = "t4g.large"
   data_volume_size_gb = 50
 
   # Public IP + open to the internet on 5432. The 32-char random password
