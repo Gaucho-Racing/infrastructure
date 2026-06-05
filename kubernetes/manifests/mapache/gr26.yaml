@@ -8,7 +8,7 @@
 # MQTT broker lives on the gr-mqtt EC2 outside the cluster. Pods reach
 # it over the public hostname (gr-mqtt.gauchoracing.com); throughput is
 # low enough that hairpinning out through the NAT gateway is fine.
-# Auth is gr26/<MQTT_PASSWORD>.
+# Auth uses the shared mapache-fleet credential (MQTT_USER=mapache).
 
 apiVersion: apps/v1
 kind: Deployment
@@ -83,12 +83,12 @@ spec:
             - name: MQTT_PORT
               value: "1883"
             - name: MQTT_USER
-              value: gr26
+              value: mapache
             - name: MQTT_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: mapache-secrets
-                  key: MQTT_PASSWORD
+                  key: MQTT_MAPACHE_PASSWORD
             - name: FOREMAN_ENDPOINT
               value: http://foreman.mapache.svc.cluster.local:7011
             - name: NUM_WORKERS
