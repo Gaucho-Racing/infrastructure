@@ -65,6 +65,12 @@ output "mqtt_password_tcm26" {
   sensitive   = true
 }
 
+output "mqtt_password_mapache" {
+  description = "Generated MQTT password for the mapache services fleet user. Read with `terraform output -raw mqtt_password_mapache` → mapache-secrets/MQTT_MAPACHE_PASSWORD or wherever the consumer reads it."
+  value       = module.mqtt.mqtt_password_mapache
+  sensitive   = true
+}
+
 output "clickhouse_private_ip" {
   description = "Private IP of the ClickHouse EC2. In-cluster pods connect to this on 8123 (HTTP) / 9000 (native)."
   value       = module.clickhouse.private_ip

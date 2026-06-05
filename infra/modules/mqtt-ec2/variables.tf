@@ -42,6 +42,12 @@ variable "mqtt_user_tcm26" {
   default     = "tcm26"
 }
 
+variable "mqtt_user_mapache" {
+  description = "MQTT username for mapache services beyond gr26 (query, foreman, future publishers). Paired with the module-generated mqtt_password_mapache. Distinct from mqtt_user so the service-fleet credential can rotate independently of the CAN-ingest pipeline."
+  type        = string
+  default     = "mapache"
+}
+
 variable "allowed_security_group_ids" {
   description = "Security group IDs allowed to connect on port 1883. Typically the EKS node SG."
   type        = list(string)
