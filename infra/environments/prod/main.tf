@@ -156,9 +156,13 @@ resource "cloudflare_dns_record" "gr_mqtt" {
 # ClickHouse on EC2 — analytics store for CAN telemetry + Epic Shelter
 # ingest. Sentinel + transactional mapache state stay on gr-postgres;
 # anything column-store-shaped (signals, aggregates, gr25_message
-# successor tables) lands here. t4g.xlarge (16 GiB) gives meaningful
-# RAM headroom — ClickHouse benefits from RAM more than Postgres did,
-# and the t4g.medium gr-postgres OOM was a fresh reminder.
+# successor tables) lands here.
+#
+# r8g.xlarge (Graviton4, 4 vCPU, 32 GiB) — RAM-optimized for the mark
+# cache + per-query memory budget that columnar scans depend on, and
+# dedicated CPU (no t-series credit accounting) so a big aggregation
+# doesn't tip into throttling. Steeper hourly than t4g.xlarge but
+# avoiding another OOM is worth ~$55/mo.
 #
 # Read the admin password via:
 #   terraform output -raw clickhouse_admin_password
@@ -170,7 +174,7 @@ module "clickhouse" {
   subnet_id         = module.vpc.public_subnet_ids[0]
   availability_zone = "us-west-2a"
 
-  instance_type       = "t4g.xlarge"
+  instance_type       = "r8g.xlarge"
   data_volume_size_gb = 200
 
   associate_public_ip = true
