@@ -34,18 +34,18 @@ resources:
 
 images:
   - name: ghcr.io/gaucho-racing/mapache/auth
-    newTag: 3.5.0
+    newTag: 3.5.1
   - name: ghcr.io/gaucho-racing/mapache/vehicle
-    newTag: 3.5.0
+    newTag: 3.5.1
   - name: ghcr.io/gaucho-racing/mapache/gr26
-    newTag: 3.5.0
+    newTag: 3.5.1
   - name: ghcr.io/gaucho-racing/mapache/live
-    newTag: 3.5.0
+    newTag: 3.5.1
   - name: ghcr.io/gaucho-racing/mapache/query
-    newTag: 3.5.0
+    newTag: 3.5.1
   - name: ghcr.io/gaucho-racing/mapache/foreman
-    newTag: 3.5.0
+    newTag: 3.5.1
   - name: ghcr.io/gaucho-racing/mapache/dashboard
-    newTag: 3.5.0
+    newTag: 3.5.1
   - name: bk1031/kerbecs
     newTag: 3.2.0
