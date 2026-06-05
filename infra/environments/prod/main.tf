@@ -45,7 +45,7 @@ module "argocd" {
   domain = "argocd.gauchoracing.com"
 
   # Sentinel-generated client_id for the registered ArgoCD application.
-  oidc_client_id = "XwwQhdCWZ9Cn"
+  oidc_client_id = "b9OrCRXdo1VQ"
 
   depends_on = [module.eks]
 }
