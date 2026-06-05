@@ -19,9 +19,9 @@ variable "availability_zone" {
 }
 
 variable "instance_type" {
-  description = "EC2 instance type. ClickHouse benefits significantly from RAM (mark cache, query memory); t4g.large (8 GiB) is the floor, t4g.xlarge (16 GiB) is comfortable. r-series gets expensive but is RAM-optimized."
+  description = "EC2 instance type. ClickHouse benefits significantly from RAM (mark cache, query memory) and dedicated CPU. r8g.xlarge (Graviton4, 4 vCPU, 32 GiB) is the prod default; r-series RAM-optimized, dedicated cores (no t-series credit accounting). Drop to t4g.xlarge if cost matters more than steady-state perf."
   type        = string
-  default     = "t4g.large"
+  default     = "r8g.xlarge"
 }
 
 variable "data_volume_size_gb" {
@@ -31,9 +31,9 @@ variable "data_volume_size_gb" {
 }
 
 variable "clickhouse_version" {
-  description = "Pinned clickhouse/clickhouse-server image tag. Bump deliberately; major versions occasionally change defaults around merge tree storage."
+  description = "Pinned clickhouse/clickhouse-server image tag. Defaults to the Alpine variant — smaller image, musl libc; the regular Ubuntu-based tag drops the `-alpine` suffix. Bump deliberately; major versions occasionally change defaults around merge tree storage."
   type        = string
-  default     = "24.12"
+  default     = "26.3-alpine"
 }
 
 variable "admin_user" {
