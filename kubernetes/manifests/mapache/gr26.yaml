@@ -88,7 +88,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: mapache-secrets
-                  key: MQTT_MAPACHE_PASSWORD
+                  key: MQTT_PASSWORD
             - name: FOREMAN_ENDPOINT
               value: http://foreman.mapache.svc.cluster.local:7011
             - name: NUM_WORKERS
