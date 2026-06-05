@@ -153,6 +153,43 @@ resource "cloudflare_dns_record" "gr_mqtt" {
   proxied = false
 }
 
+# ClickHouse on EC2 — analytics store for CAN telemetry + Epic Shelter
+# ingest. Sentinel + transactional mapache state stay on gr-postgres;
+# anything column-store-shaped (signals, aggregates, gr25_message
+# successor tables) lands here. t4g.xlarge (16 GiB) gives meaningful
+# RAM headroom — ClickHouse benefits from RAM more than Postgres did,
+# and the t4g.medium gr-postgres OOM was a fresh reminder.
+#
+# Read the admin password via:
+#   terraform output -raw clickhouse_admin_password
+module "clickhouse" {
+  source = "../../modules/clickhouse-ec2"
+
+  name              = "gr-clickhouse"
+  vpc_id            = module.vpc.vpc_id
+  subnet_id         = module.vpc.public_subnet_ids[0]
+  availability_zone = "us-west-2a"
+
+  instance_type       = "t4g.xlarge"
+  data_volume_size_gb = 200
+
+  associate_public_ip = true
+  admin_cidr_blocks   = ["0.0.0.0/0"]
+
+  allowed_security_group_ids = [
+    module.eks.node_security_group_id,
+  ]
+}
+
+resource "cloudflare_dns_record" "gr_clickhouse" {
+  zone_id = data.cloudflare_zone.gauchoracing.id
+  name    = "gr-clickhouse"
+  type    = "A"
+  content = module.clickhouse.public_ip
+  ttl     = 300
+  proxied = false
+}
+
 # Per-hostname SSL/TLS override. The zone defaults to "Flexible" (CF
 # talks HTTP to origin), but our ALB-backed Ingresses run HTTPS-only
 # with the imported Origin CA cert — Flexible there causes a redirect

@@ -64,3 +64,19 @@ output "mqtt_password_tcm26" {
   value       = module.mqtt.mqtt_password_tcm26
   sensitive   = true
 }
+
+output "clickhouse_private_ip" {
+  description = "Private IP of the ClickHouse EC2. In-cluster pods connect to this on 8123 (HTTP) / 9000 (native)."
+  value       = module.clickhouse.private_ip
+}
+
+output "clickhouse_public_ip" {
+  description = "Public IP of the ClickHouse EC2 (EIP). External admins connect to this on 8123/9000, or use gr-clickhouse.gauchoracing.com."
+  value       = module.clickhouse.public_ip
+}
+
+output "clickhouse_admin_password" {
+  description = "Generated ClickHouse admin password. Read with `terraform output -raw clickhouse_admin_password`."
+  value       = module.clickhouse.admin_password
+  sensitive   = true
+}

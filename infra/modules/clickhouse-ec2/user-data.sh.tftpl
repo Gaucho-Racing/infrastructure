@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+set -euxo pipefail
+
+# Wait for the data volume to attach. AWS asynchronously attaches secondary
+# volumes; cloud-init can start before /dev/nvme1n1 exists.
+DATA_DEVICE="/dev/nvme1n1"
+for _ in $(seq 1 30); do
+  [ -b "$DATA_DEVICE" ] && break
+  sleep 2
+done
+
+# Format only if not already a filesystem — prevents wipe on instance
+# replacement when the EBS volume is preserved.
+if ! blkid "$DATA_DEVICE" >/dev/null 2>&1; then
+  mkfs.ext4 -L clickhouse-data "$DATA_DEVICE"
+fi
+
+mkdir -p /var/lib/clickhouse
+echo "LABEL=clickhouse-data /var/lib/clickhouse ext4 defaults,nofail 0 2" >> /etc/fstab
+mount /var/lib/clickhouse
+
+# Official clickhouse-server image runs as uid 101. Hand the data dir over
+# before the container starts; otherwise initdb fails on permission errors.
+chown 101:101 /var/lib/clickhouse
+
+dnf install -y docker
+systemctl enable --now docker
+
+# users.d overrides — merged with the image's default users.xml at startup.
+# Drops the default user (no password, full access) and adds a sha256-hashed
+# admin with access_management so further users can be created via SQL.
+mkdir -p /etc/clickhouse-server/users.d
+
+cat >/etc/clickhouse-server/users.d/admin.xml <<EOF
+<?xml version="1.0"?>
+<clickhouse>
+  <users>
+    <${admin_user}>
+      <password_sha256_hex>${admin_password_sha256}</password_sha256_hex>
+      <networks>
+        <ip>::/0</ip>
+      </networks>
+      <profile>default</profile>
+      <quota>default</quota>
+      <access_management>1</access_management>
+    </${admin_user}>
+  </users>
+</clickhouse>
+EOF
+
+cat >/etc/clickhouse-server/users.d/remove-default-user.xml <<'EOF'
+<?xml version="1.0"?>
+<clickhouse>
+  <users>
+    <default remove="1"/>
+  </users>
+</clickhouse>
+EOF
+
+chmod 600 /etc/clickhouse-server/users.d/admin.xml
+
+# --network=host: nothing else on this box uses 8123 or 9000, so skip the
+# docker-proxy NAT layer. --restart=always: container survives reboots
+# (docker.service is enabled above). --ulimit nofile=262144: ClickHouse
+# wants high fd limits for many concurrent table parts; the official docs
+# call this out as a hard requirement.
+docker run -d \
+  --name clickhouse \
+  --restart=always \
+  --network=host \
+  --ulimit nofile=262144:262144 \
+  -v /var/lib/clickhouse:/var/lib/clickhouse \
+  -v /etc/clickhouse-server/users.d:/etc/clickhouse-server/users.d:ro \
+  clickhouse/clickhouse-server:${clickhouse_version}
