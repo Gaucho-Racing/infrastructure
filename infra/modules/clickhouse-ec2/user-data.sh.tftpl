@@ -57,6 +57,11 @@ cat >/etc/clickhouse-server/users.d/remove-default-user.xml <<'EOF'
 </clickhouse>
 EOF
 
+# Bind-mount preserves numeric uid/gid into the container, which runs as
+# the clickhouse uid 101. A plain `chmod 600` leaves the file readable by
+# root only, and the container can't load it (CANNOT_LOAD_CONFIG crash
+# loop). Chown to 101 so the container's clickhouse user can read it.
+chown 101:101 /etc/clickhouse-server/users.d/admin.xml
 chmod 600 /etc/clickhouse-server/users.d/admin.xml
 
 # --network=host: nothing else on this box uses 8123 or 9000, so skip the
