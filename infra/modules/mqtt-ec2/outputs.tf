@@ -44,3 +44,14 @@ output "mqtt_password_tcm26" {
   value       = random_password.mqtt_tcm26.result
   sensitive   = true
 }
+
+output "mqtt_user_mapache" {
+  description = "MQTT username for mapache services beyond gr26. Pair with mqtt_password_mapache."
+  value       = var.mqtt_user_mapache
+}
+
+output "mqtt_password_mapache" {
+  description = "Generated MQTT password for mapache services. Read via `terraform output -raw mqtt_password_mapache` and put into the relevant k8s Secret key."
+  value       = random_password.mqtt_mapache.result
+  sensitive   = true
+}

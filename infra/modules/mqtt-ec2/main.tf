@@ -49,6 +49,15 @@ resource "random_password" "mqtt_tcm26" {
   special = false
 }
 
+# Credential for mapache services (the in-cluster Go services beyond gr26
+# — e.g. query, foreman, future publishers). Distinct from gr26's own
+# user so the service-fleet credential can rotate independently of the
+# CAN-ingest pipeline.
+resource "random_password" "mqtt_mapache" {
+  length  = 32
+  special = false
+}
+
 resource "aws_security_group" "this" {
   name        = var.name
   description = "NanoMQ for ${var.name}"
@@ -107,18 +116,22 @@ resource "aws_instance" "this" {
   }
 
   user_data = templatefile("${path.module}/user-data.sh.tftpl", {
-    nanomq_version      = var.nanomq_version
-    mqtt_user           = var.mqtt_user
-    mqtt_password       = random_password.mqtt.result
-    mqtt_user_tcm26     = var.mqtt_user_tcm26
-    mqtt_password_tcm26 = random_password.mqtt_tcm26.result
+    nanomq_version        = var.nanomq_version
+    mqtt_user             = var.mqtt_user
+    mqtt_password         = random_password.mqtt.result
+    mqtt_user_tcm26       = var.mqtt_user_tcm26
+    mqtt_password_tcm26   = random_password.mqtt_tcm26.result
+    mqtt_user_mapache     = var.mqtt_user_mapache
+    mqtt_password_mapache = random_password.mqtt_mapache.result
   })
 
-  # Don't recycle the instance on user-data churn. nanomq carries no
-  # persistent state we care about across replacements, so AMI bumps
-  # are also benign — `terraform taint` to intentionally replace.
+  # user_data is intentionally NOT in ignore_changes: nanomq carries no
+  # persistent state, so legitimate config edits (new user, ACL change)
+  # should flow through a normal `terraform apply` and trigger the ~90s
+  # broker downtime willingly. Keeping `ami` ignored so unrelated AL2023
+  # AMI churn doesn't silently roll the instance.
   lifecycle {
-    ignore_changes = [user_data, ami]
+    ignore_changes = [ami]
   }
 
   tags = {
