@@ -125,6 +125,14 @@ resource "aws_instance" "this" {
     mqtt_password_mapache = random_password.mqtt_mapache.result
   })
 
+  # Force instance replacement when user_data changes. Without this, the
+  # AWS provider's default is to call ModifyInstanceAttribute, which
+  # *stores* the new user_data but doesn't re-execute it — the file lands
+  # only on the next stop+start. We learned this the hard way: a normal
+  # apply that added a third nanomq user updated state in place but left
+  # the running broker with the old /etc/nanomq_pwd.conf.
+  user_data_replace_on_change = true
+
   # user_data is intentionally NOT in ignore_changes: nanomq carries no
   # persistent state, so legitimate config edits (new user, ACL change)
   # should flow through a normal `terraform apply` and trigger the ~90s
