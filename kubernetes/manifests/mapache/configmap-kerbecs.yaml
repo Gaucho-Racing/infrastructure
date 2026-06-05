@@ -66,6 +66,12 @@ data:
         instances:
           - http://gr26.mapache.svc.cluster.local:7005
 
+      live:
+        name: mapache-live
+        version: 0.1.0
+        instances:
+          - http://live.mapache.svc.cluster.local:7015
+
       query:
         name: mapache-query
         version: 0.1.0
@@ -153,6 +159,34 @@ data:
         match:
           path: /api/gr26/*
         upstream: gr26
+        rewrite:
+          strip_prefix: /api
+        envelope: default
+
+      # Specific WS/SSE routes need passthrough so kerbecs doesn't wrap
+      # the response envelope or interfere with the connection upgrade.
+      # The catch-all `live` route below uses default envelope for the
+      # plain HTTP endpoints (/live/ping, /live/stats).
+      - name: live-ws
+        match:
+          path: /api/live/ws
+        upstream: live
+        rewrite:
+          strip_prefix: /api
+        envelope: passthrough
+
+      - name: live-sse
+        match:
+          path: /api/live/sse
+        upstream: live
+        rewrite:
+          strip_prefix: /api
+        envelope: passthrough
+
+      - name: live
+        match:
+          path: /api/live/*
+        upstream: live
         rewrite:
           strip_prefix: /api
         envelope: default

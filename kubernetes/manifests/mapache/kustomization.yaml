@@ -26,6 +26,7 @@ resources:
   - auth.yaml
   - vehicle.yaml
   - gr26.yaml
+  - live.yaml
   - query.yaml
   - foreman.yaml
   - dashboard.yaml
@@ -37,6 +38,8 @@ images:
   - name: ghcr.io/gaucho-racing/mapache/vehicle
     newTag: 3.5.0
   - name: ghcr.io/gaucho-racing/mapache/gr26
+    newTag: 3.5.0
+  - name: ghcr.io/gaucho-racing/mapache/live
     newTag: 3.5.0
   - name: ghcr.io/gaucho-racing/mapache/query
     newTag: 3.5.0
