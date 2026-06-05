@@ -13,19 +13,20 @@ spec:
       labels:
         app: core
     spec:
-      # Hard anti-affinity — two app=core pods literally cannot share a
-      # node. With replicas=2 on a single-node cluster, the second pod
-      # stays Pending and Karpenter provisions a fresh node to host it.
-      # (topologySpreadConstraints with DoNotSchedule looked like the
-      # right tool, but its skew math is satisfied when only one node
-      # exists, so it doesn't trigger scale-out.)
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchLabels:
-                  app: core
-              topologyKey: kubernetes.io/hostname
+      # Spread across at least 2 nodes (minDomains) but tolerate skew
+      # up to 1 (so 3 replicas → [2,1], not forced [1,1,1]). minDomains
+      # makes the scheduler treat the missing-domain count as 0 when
+      # only one node currently has matching pods, so the second
+      # replica blocks on schedule and Karpenter provisions a node
+      # (requires k8s ≥ 1.30 — we're on 1.35).
+      topologySpreadConstraints:
+        - maxSkew: 1
+          minDomains: 2
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: core
       containers:
         - name: core
           # Tag is set by kustomization.yaml's images block.

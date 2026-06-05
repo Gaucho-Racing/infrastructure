@@ -20,15 +20,16 @@ spec:
       labels:
         app: saml
     spec:
-      # One replica per node — see comment in core.yaml. Inert at replicas: 1,
+      # Topology spread — see comment in core.yaml. Inert at replicas: 1,
       # kept so scaling up later spreads pods without an edit here.
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchLabels:
-                  app: saml
-              topologyKey: kubernetes.io/hostname
+      topologySpreadConstraints:
+        - maxSkew: 1
+          minDomains: 2
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: saml
       containers:
         - name: saml
           # Tag is set by kustomization.yaml's images block.
