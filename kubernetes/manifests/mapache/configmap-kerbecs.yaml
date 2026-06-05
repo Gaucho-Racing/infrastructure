@@ -15,7 +15,7 @@ data:
   kerbecs.yaml: |
     gateway:
       name: mapache-gateway
-      version: 0.1.0
+      version: 3.4.5
       env: ${ENV:PROD}
       limits:
         max_request_bytes: 100MB
@@ -28,13 +28,13 @@ data:
 
     listeners:
       gateway:
-        port: "10310"
+        port: ${PORT:10310}
         cors:
           enabled: true
           allowed_origins: ["*"]
           allow_credentials: false
       admin:
-        port: "10300"
+        port: ${ADMIN_PORT:10300}
         auth:
           type: basic
           username: ${KERBECS_USER:admin}
@@ -50,37 +50,37 @@ data:
     upstreams:
       auth:
         name: mapache-auth
-        version: 0.1.0
+        version: 3.4.5
         instances:
           - http://auth.mapache.svc.cluster.local:7002
 
       vehicle:
         name: mapache-vehicle
-        version: 0.1.0
+        version: 3.4.5
         instances:
           - http://vehicle.mapache.svc.cluster.local:7003
 
       gr26:
         name: mapache-gr26
-        version: 0.1.0
+        version: 3.4.5
         instances:
           - http://gr26.mapache.svc.cluster.local:7005
 
       query:
         name: mapache-query
-        version: 0.1.0
+        version: 3.4.5
         instances:
           - http://query.mapache.svc.cluster.local:7010
 
       foreman:
         name: mapache-foreman
-        version: 0.1.0
+        version: 3.4.5
         instances:
           - http://foreman.mapache.svc.cluster.local:7011
 
       dashboard:
         name: mapache-dashboard
-        version: 0.1.0
+        version: 3.4.5
         instances:
           - http://dashboard.mapache.svc.cluster.local:80
 
