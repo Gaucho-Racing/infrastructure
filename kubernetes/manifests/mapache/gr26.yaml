@@ -42,19 +42,23 @@ spec:
               value: PROD
             - name: PORT
               value: "7005"
-            - name: DATABASE_HOST
-              value: postgres.mapache.svc.cluster.local
-            - name: DATABASE_PORT
-              value: "5432"
-            - name: DATABASE_USER
-              value: postgres
-            - name: DATABASE_NAME
+            # Telemetry storage (signal, gr26_can, ping) moved off Postgres
+            # to ClickHouse — gr26 holds no Postgres connection anymore.
+            # The gr26 process auto-creates the mapache database on first
+            # connect via the always-present `default` DB.
+            - name: CLICKHOUSE_HOST
+              value: gr-clickhouse.gauchoracing.com
+            - name: CLICKHOUSE_PORT
+              value: "9000"
+            - name: CLICKHOUSE_USER
+              value: admin
+            - name: CLICKHOUSE_DATABASE
               value: mapache
-            - name: DATABASE_PASSWORD
+            - name: CLICKHOUSE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: mapache-secrets
-                  key: DATABASE_PASSWORD
+                  key: CLICKHOUSE_PASSWORD
             - name: KERBECS_ENDPOINT
               value: http://kerbecs.mapache.svc.cluster.local:10300
             - name: KERBECS_USER
