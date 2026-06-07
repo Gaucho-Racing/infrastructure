@@ -85,6 +85,23 @@ EOF
 # admin.xml this stays world-readable rather than chmod 600).
 chown 101:101 /etc/clickhouse-server/config.d/quiet-logs.xml
 
+# The image ships /etc/clickhouse-server/config.d/docker_related_config.xml,
+# which sets listen_host to 0.0.0.0/:: so the server is reachable over the
+# network. Bind-mounting this config.d directory (below) REPLACES the image's
+# directory and hides that file, so the server falls back to its localhost-only
+# default and 8123/9000 stop answering externally (local clients still work).
+# Re-supply the listen config here so a bind-mounted config.d keeps the box
+# publicly reachable. listen_try=1 lets it boot if one address family is absent.
+cat >/etc/clickhouse-server/config.d/listen.xml <<'EOF'
+<clickhouse>
+  <listen_host>0.0.0.0</listen_host>
+  <listen_host>::</listen_host>
+  <listen_try>1</listen_try>
+</clickhouse>
+EOF
+
+chown 101:101 /etc/clickhouse-server/config.d/listen.xml
+
 # --network=host: nothing else on this box uses 8123 or 9000, so skip the
 # docker-proxy NAT layer. --restart=always: container survives reboots
 # (docker.service is enabled above). --ulimit nofile=262144: ClickHouse
