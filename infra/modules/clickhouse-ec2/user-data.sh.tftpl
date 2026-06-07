@@ -64,6 +64,27 @@ EOF
 chown 101:101 /etc/clickhouse-server/users.d/admin.xml
 chmod 600 /etc/clickhouse-server/users.d/admin.xml
 
+# config.d overrides — server-level settings, merged with the image's default
+# config.xml at startup. Stock ClickHouse ships at `trace` log level with
+# system.text_log enabled and no TTL; on this box text_log grew ~155 GiB in
+# ~2 days and filled the data volume, after which every INSERT failed with
+# NOT_ENOUGH_SPACE (Code 243). Lower the level and disable text_log so the
+# server can't log itself to death on a fresh boot / image bump.
+mkdir -p /etc/clickhouse-server/config.d
+
+cat >/etc/clickhouse-server/config.d/quiet-logs.xml <<'EOF'
+<clickhouse>
+  <logger>
+    <level>information</level>
+  </logger>
+  <text_log remove="1"/>
+</clickhouse>
+EOF
+
+# Readable by the container's clickhouse uid 101 (no secrets here, so unlike
+# admin.xml this stays world-readable rather than chmod 600).
+chown 101:101 /etc/clickhouse-server/config.d/quiet-logs.xml
+
 # --network=host: nothing else on this box uses 8123 or 9000, so skip the
 # docker-proxy NAT layer. --restart=always: container survives reboots
 # (docker.service is enabled above). --ulimit nofile=262144: ClickHouse
@@ -76,4 +97,5 @@ docker run -d \
   --ulimit nofile=262144:262144 \
   -v /var/lib/clickhouse:/var/lib/clickhouse \
   -v /etc/clickhouse-server/users.d:/etc/clickhouse-server/users.d:ro \
+  -v /etc/clickhouse-server/config.d:/etc/clickhouse-server/config.d:ro \
   clickhouse/clickhouse-server:${clickhouse_version}
