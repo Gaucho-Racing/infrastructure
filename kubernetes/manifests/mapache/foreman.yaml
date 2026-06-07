@@ -25,7 +25,10 @@ spec:
               app: foreman
       containers:
         - name: foreman
-          image: ghcr.io/gaucho-racing/mapache/foreman:latest
+          # Standalone Foreman lives in github.com/gaucho-racing/Foreman now.
+          # The kustomization.yaml `images:` block pins the tag — :latest
+          # here is just the placeholder kustomize matches against.
+          image: ghcr.io/gaucho-racing/foreman:latest
           ports:
             - containerPort: 7011
           resources:
@@ -53,6 +56,12 @@ spec:
                 secretKeyRef:
                   name: mapache-secrets
                   key: DATABASE_PASSWORD
+            # Foreman shares the `mapache` database; default 'foreman_'
+            # prefix keeps foreman_jobs / foreman_job_runs /
+            # foreman_schedules namespaced away from host-app tables.
+            # Set explicitly so the choice is reviewable in the manifest.
+            - name: FOREMAN_TABLE_PREFIX
+              value: "foreman_"
 ---
 apiVersion: v1
 kind: Service
