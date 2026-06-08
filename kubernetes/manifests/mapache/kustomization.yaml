@@ -47,7 +47,7 @@ images:
   # with its own release cadence. Track via its semver tags, not
   # mapache's. Mapache services keep tracking together via newTag above.
   - name: ghcr.io/gaucho-racing/foreman
-    newTag: 2.0.1
+    newTag: 2.0.2
   - name: ghcr.io/gaucho-racing/mapache/dashboard
     newTag: 3.6.0
   - name: bk1031/kerbecs
