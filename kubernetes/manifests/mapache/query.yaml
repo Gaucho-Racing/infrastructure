@@ -53,6 +53,23 @@ spec:
                 secretKeyRef:
                   name: mapache-secrets
                   key: DATABASE_PASSWORD
+            # ClickHouse holds the telemetry tables (signal, gr26_can, ping).
+            # The query service uses clickhouse-connect over HTTP, so it needs
+            # the HTTP port 8123 — distinct from gr26's native 9000. Password
+            # is shared with gr26 via mapache-secrets/CLICKHOUSE_PASSWORD.
+            - name: CLICKHOUSE_HOST
+              value: gr-clickhouse.gauchoracing.com
+            - name: CLICKHOUSE_PORT
+              value: "8123"
+            - name: CLICKHOUSE_USER
+              value: admin
+            - name: CLICKHOUSE_DATABASE
+              value: mapache
+            - name: CLICKHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: CLICKHOUSE_PASSWORD
             - name: KERBECS_ENDPOINT
               value: http://kerbecs.mapache.svc.cluster.local:10300
             - name: KERBECS_USER
