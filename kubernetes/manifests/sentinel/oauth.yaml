@@ -70,6 +70,31 @@ spec:
             # ID tokens have to be byte-identical for relying parties.
             - name: ISSUER
               value: https://sentinel-v5.gauchoracing.com
+            # Discord OAuth client config for the "Continue with Discord"
+            # login button. Client id/secret are the Discord application's
+            # credentials; the redirect URI must byte-match what the web
+            # client sends in its authorize call (and what's registered
+            # on the Discord application's OAuth2 settings).
+            - name: DISCORD_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: sentinel-secrets
+                  key: DISCORD_CLIENT_ID
+            - name: DISCORD_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: sentinel-secrets
+                  key: DISCORD_CLIENT_SECRET
+            - name: DISCORD_REDIRECT_URI
+              value: https://sentinel-v5.gauchoracing.com/auth/login/discord
+            # Shared secret exchanged at startup for this service's
+            # pre-seeded bearer JWT. Same value as every other
+            # sentinel-* deployment.
+            - name: INTERNAL_BOOTSTRAP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: sentinel-secrets
+                  key: INTERNAL_BOOTSTRAP_SECRET
 ---
 apiVersion: v1
 kind: Service

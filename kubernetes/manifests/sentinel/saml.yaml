@@ -79,6 +79,14 @@ spec:
             # registered service provider.
             - name: ISSUER
               value: https://sentinel-v5.gauchoracing.com
+            # Shared secret exchanged at startup for this service's
+            # pre-seeded bearer JWT. Same value as every other
+            # sentinel-* deployment.
+            - name: INTERNAL_BOOTSTRAP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: sentinel-secrets
+                  key: INTERNAL_BOOTSTRAP_SECRET
 ---
 apiVersion: v1
 kind: Service
