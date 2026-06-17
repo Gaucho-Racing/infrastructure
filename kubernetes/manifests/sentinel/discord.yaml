@@ -69,6 +69,13 @@ spec:
                 secretKeyRef:
                   name: sentinel-secrets
                   key: DISCORD_TOKEN
+            # Same value as on core; used at startup to exchange for
+            # this service's pre-seeded bearer JWT.
+            - name: INTERNAL_BOOTSTRAP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: sentinel-secrets
+                  key: INTERNAL_BOOTSTRAP_SECRET
 ---
 apiVersion: v1
 kind: Service
