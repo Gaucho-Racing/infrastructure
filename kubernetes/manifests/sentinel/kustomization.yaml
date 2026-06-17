@@ -31,14 +31,14 @@ resources:
 
 images:
   - name: ghcr.io/gaucho-racing/sentinel-core
-    newTag: 5.5.4
+    newTag: 5.6.0
   - name: ghcr.io/gaucho-racing/sentinel-oauth
-    newTag: 5.5.4
+    newTag: 5.6.0
   - name: ghcr.io/gaucho-racing/sentinel-discord
-    newTag: 5.5.4
+    newTag: 5.6.0
   - name: ghcr.io/gaucho-racing/sentinel-saml
-    newTag: 5.5.4
+    newTag: 5.6.0
   - name: ghcr.io/gaucho-racing/sentinel-web
-    newTag: 5.5.4
+    newTag: 5.6.0
   - name: bk1031/kerbecs
     newTag: 3.2.0
