@@ -18,7 +18,7 @@
 #     --from-literal=MQTT_PASSWORD="$(cd ../../infrastructure/infra/environments/prod && terraform output -raw mqtt_password)" \
 #     --from-literal=KERBECS_PASSWORD=... \
 #     --from-literal=SENTINEL_CLIENT_SECRET=... \
-#     --from-literal=SENTINEL_TOKEN=... \
+#     --from-literal=SENTINEL_SA_TOKEN=... \
 #     --from-literal=AWS_ACCESS_KEY_ID=... \
 #     --from-literal=AWS_SECRET_ACCESS_KEY=...
 #
