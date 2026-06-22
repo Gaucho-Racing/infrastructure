@@ -95,6 +95,12 @@ spec:
                 secretKeyRef:
                   name: sentinel-secrets
                   key: INTERNAL_BOOTSTRAP_SECRET
+            # client_id of the shared Google Workspace account application
+            # (team@gauchoracing.com). The oauth service overrides identity
+            # claims for this client so authorized users sign in as the shared
+            # account. Not a secret — the client_secret is what's sensitive.
+            - name: TEAM_GOOGLE_CLIENT_ID
+              value: uozOEnbeoJ2t
 ---
 apiVersion: v1
 kind: Service
