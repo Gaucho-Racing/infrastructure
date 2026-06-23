@@ -39,8 +39,6 @@ images:
     newTag: 5.7.0
   - name: ghcr.io/gaucho-racing/sentinel-saml
     newTag: 5.7.0
-  # google joined after the 5.6.4 release, so there's no :5.6.4 image yet.
-  # Track :latest until the next release pins it to semver like the rest.
   - name: ghcr.io/gaucho-racing/sentinel-google
     newTag: 5.7.0
   - name: ghcr.io/gaucho-racing/sentinel-web
