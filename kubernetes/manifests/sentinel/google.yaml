@@ -77,23 +77,20 @@ spec:
                 secretKeyRef:
                   name: sentinel-secrets
                   key: INTERNAL_BOOTSTRAP_SECRET
-            # Service-account JSON key (domain-wide delegation, scope
-            # admin.directory.group.member) and the super-admin it impersonates.
-            # Marked optional so the pod still boots before the secret keys are
-            # populated — sync just no-ops until they're set (then restart the
-            # pod to pick them up).
+            # Service-account JSON key for domain-wide delegation (scope
+            # admin.directory.group.member). The only real secret here — marked
+            # optional so the pod still boots before it's populated; sync just
+            # no-ops until it's set (then restart the pod to pick it up).
             - name: GOOGLE_SERVICE_ACCOUNT
               valueFrom:
                 secretKeyRef:
                   name: sentinel-secrets
                   key: GOOGLE_SERVICE_ACCOUNT
                   optional: true
+            # The super-admin the service account impersonates. Just an email,
+            # not a credential, so it's a plain value rather than a secret.
             - name: GOOGLE_ADMIN_SUBJECT
-              valueFrom:
-                secretKeyRef:
-                  name: sentinel-secrets
-                  key: GOOGLE_ADMIN_SUBJECT
-                  optional: true
+              value: admin@gauchoracing.com
 ---
 apiVersion: v1
 kind: Service
