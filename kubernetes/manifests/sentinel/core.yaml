@@ -63,10 +63,6 @@ spec:
             # `issuer` advertised by the OAuth discovery document.
             - name: ISSUER
               value: https://sentinel-v5.gauchoracing.com
-            # Comma-separated entity IDs to bootstrap into the Admins
-            # group on each boot. Idempotent — safe to leave as-is.
-            - name: ADMIN_ENTITY_IDS
-              value: "ent_01kt38a23b9ya1w5x4t9dasd86"
             # Shared secret each non-core service exchanges at startup
             # for its pre-seeded bearer JWT. Same value as on every
             # other sentinel-* deployment. Rotating it requires a
