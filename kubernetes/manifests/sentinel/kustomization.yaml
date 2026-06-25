@@ -32,16 +32,16 @@ resources:
 
 images:
   - name: ghcr.io/gaucho-racing/sentinel-core
-    newTag: 5.7.1
+    newTag: 5.8.0
   - name: ghcr.io/gaucho-racing/sentinel-oauth
-    newTag: 5.7.1
+    newTag: 5.8.0
   - name: ghcr.io/gaucho-racing/sentinel-discord
-    newTag: 5.7.1
+    newTag: 5.8.0
   - name: ghcr.io/gaucho-racing/sentinel-saml
-    newTag: 5.7.1
+    newTag: 5.8.0
   - name: ghcr.io/gaucho-racing/sentinel-google
-    newTag: 5.7.1
+    newTag: 5.8.0
   - name: ghcr.io/gaucho-racing/sentinel-web
-    newTag: 5.7.1
+    newTag: 5.8.0
   - name: bk1031/kerbecs
     newTag: 3.2.0
