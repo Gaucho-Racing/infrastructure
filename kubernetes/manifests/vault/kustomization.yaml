@@ -12,8 +12,8 @@ resources:
 
 images:
   - name: ghcr.io/gaucho-racing/vault-server
-    newTag: 1.2.0
+    newTag: 1.3.0
   - name: ghcr.io/gaucho-racing/vault-web
-    newTag: 1.2.0
+    newTag: 1.3.0
   - name: bk1031/kerbecs
     newTag: 3.2.0
