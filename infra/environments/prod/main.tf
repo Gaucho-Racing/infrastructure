@@ -71,8 +71,9 @@ module "origin_cert" {
 
 # Postgres on EC2. Lives in the EKS VPC so pods reach it via private IP;
 # SG-locked to traffic originating from the EKS node SG so nothing outside
-# the cluster can connect. ARM/Graviton t4g.large (8 GiB) — bumped from
-# t4g.medium after the OOM under NUM_WORKERS=4 ingest pressure.
+# the cluster can connect. Off-season — running on t4g.small to keep
+# cost down; bump back to t4g.large before resuming NUM_WORKERS=4 ingest
+# (the larger size was originally set after an OOM at that workload).
 #
 # Generated password is in TF state — read with:
 #   terraform output -raw postgres_password
@@ -88,7 +89,7 @@ module "postgres" {
   subnet_id         = module.vpc.public_subnet_ids[0]
   availability_zone = "us-west-2a"
 
-  instance_type       = "t4g.large"
+  instance_type       = "t4g.small"
   data_volume_size_gb = 50
 
   # Public IP + open to the internet on 5432. The 32-char random password
@@ -136,6 +137,10 @@ module "mqtt" {
   vpc_id            = module.vpc.vpc_id
   subnet_id         = module.vpc.public_subnet_ids[0]
   availability_zone = "us-west-2a"
+
+  # Off-season override — NanoMQ runs fine on t4g.nano at idle/low publish
+  # rates. Drop the override (module default t4g.small) before in-season.
+  instance_type = "t4g.nano"
 
   associate_public_ip = true
   admin_cidr_blocks   = ["0.0.0.0/0"]
