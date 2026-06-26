@@ -54,7 +54,7 @@ spec:
             - name: SENTINEL_URL
               value: https://sentinel-v5.gauchoracing.com
             - name: SENTINEL_CLIENT_ID
-              value: cfqmh6bfYFe8
+              value: Ehf9Nl8SVs9w
             - name: SENTINEL_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
