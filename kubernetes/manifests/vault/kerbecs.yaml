@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kerbecs
+  namespace: vault
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kerbecs
+  template:
+    metadata:
+      labels:
+        app: kerbecs
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          minDomains: 2
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: kerbecs
+      containers:
+        - name: kerbecs
+          image: bk1031/kerbecs:latest
+          ports:
+            - containerPort: 10310
+              name: gateway
+            - containerPort: 10300
+              name: admin
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            - name: KERBECS_CONFIG
+              value: /etc/kerbecs/kerbecs.yaml
+            - name: ENV
+              value: PROD
+            - name: KERBECS_USER
+              value: admin
+            - name: KERBECS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: vault-secrets
+                  key: KERBECS_PASSWORD
+          volumeMounts:
+            - name: kerbecs-config
+              mountPath: /etc/kerbecs
+              readOnly: true
+      volumes:
+        - name: kerbecs-config
+          configMap:
+            name: kerbecs-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kerbecs
+  namespace: vault
+spec:
+  selector:
+    app: kerbecs
+  ports:
+    - name: gateway
+      port: 10310
+      targetPort: 10310
+    - name: admin
+      port: 10300
+      targetPort: 10300
