@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - configmap-kerbecs.yaml
+  - postgres.yaml
+  - kerbecs.yaml
+  - server.yaml
+  - web.yaml
+  - ingress.yaml
+
+images:
+  - name: ghcr.io/gaucho-racing/vault-server
+    newTag: 1.0.0
+  - name: ghcr.io/gaucho-racing/vault-web
+    newTag: 1.0.0
+  - name: bk1031/kerbecs
+    newTag: 3.2.0

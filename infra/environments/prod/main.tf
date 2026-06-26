@@ -240,6 +240,15 @@ resource "cloudflare_ruleset" "ssl_overrides" {
         ssl = "strict"
       }
     },
+    {
+      description = "vault-strict-mode"
+      expression  = "(http.host eq \"vault.gauchoracing.com\")"
+      action      = "set_config"
+      enabled     = true
+      action_parameters = {
+        ssl = "strict"
+      }
+    },
   ]
 }
 

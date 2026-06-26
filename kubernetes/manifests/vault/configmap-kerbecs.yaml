@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kerbecs-config
+  namespace: vault
+data:
+  kerbecs.yaml: |
+    gateway:
+      name: vault-gateway
+      version: 1.0.0
+      env: ${ENV:PROD}
+      timeouts:
+        dial: 5s
+        headers: 30s
+        idle: 50s
+        overall: 0
+
+    listeners:
+      gateway:
+        port: "10310"
+        cors:
+          enabled: true
+          allowed_origins: ["*"]
+          allow_credentials: false
+      admin:
+        port: "10300"
+        auth:
+          type: basic
+          username: ${KERBECS_USER:admin}
+          password: ${KERBECS_PASSWORD:admin}
+
+    providers:
+      static:
+        watch: true
+
+    upstreams:
+      vault:
+        name: vault
+        version: 1.0.0
+        instances:
+          - http://vault.vault.svc.cluster.local:9999
+
+      web:
+        name: vault-web
+        version: 1.0.0
+        instances:
+          - http://web.vault.svc.cluster.local:80
+
+    routes:
+      - name: vault-api
+        match:
+          path: /api/*
+        upstream: vault
+        rewrite:
+          strip_prefix: /api
+        envelope: passthrough
+
+      - name: vault-web
+        match:
+          path: /*
+        upstream: web
+        envelope: passthrough
