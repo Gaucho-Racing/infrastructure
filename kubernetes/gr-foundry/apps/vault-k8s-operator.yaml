@@ -1,3 +1,10 @@
+# vault-k8s-operator on the foundry cluster. Watches VaultSecret CRDs in
+# this cluster and syncs values from Vault into k8s Secrets, so future
+# service migrations can declare their secrets in git instead of running
+# manual `kubectl create secret` commands.
+#
+# Same upstream chart + version pin as the (soon-retired) gr-prod install.
+
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

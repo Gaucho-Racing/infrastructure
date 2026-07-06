@@ -1,0 +1,37 @@
+# Vault on the foundry k3s cluster. Same manifest set as the gr-prod tree
+# (kubernetes/gr-prod/manifests/vault/) diverging only in ingress.yaml
+# (Traefik) and postgres.yaml (public Cloudflare hostname). Same
+# gr-postgres DB — vault state (encrypted secret store) persists across
+# the migration.
+#
+# Manual Secret needed once after this Application first syncs. Copy
+# vault-secrets verbatim from gr-prod so the encryption key material and
+# Sentinel client credentials stay identical:
+#
+#   kubectl --context gr-prod -n vault get secret vault-secrets -o json \
+#     | jq 'del(.metadata.namespace, .metadata.resourceVersion, .metadata.uid, .metadata.creationTimestamp, .metadata.managedFields, .metadata.labels, .metadata.annotations, .metadata.ownerReferences)' \
+#     | kubectl --context gr-foundry -n vault apply -f -
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vault
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Gaucho-Racing/infrastructure.git
+    targetRevision: main
+    path: kubernetes/gr-foundry/manifests/vault
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: vault
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
