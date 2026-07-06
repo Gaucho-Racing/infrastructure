@@ -83,7 +83,13 @@ spec:
           # says. Traefik on k3s advertises node IPs there via klipper-lb;
           # those aren't publicly routable and are irrelevant since
           # traffic arrives through the tunnel anyway.
+          #
+          # --force-default-targets is required with external-dns >= 0.15:
+          # without it, the source-provided target (the Traefik LB IPs)
+          # wins and --default-targets is only used as a fallback. With
+          # the flag, --default-targets always overrides.
           - "--default-targets=$(FOUNDRY_TUNNEL_TARGET)"
+          - "--force-default-targets"
 
         logLevel: info
         logFormat: json
