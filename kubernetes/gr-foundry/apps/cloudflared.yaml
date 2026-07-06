@@ -20,7 +20,7 @@ spec:
   source:
     repoURL: https://github.com/Gaucho-Racing/infrastructure.git
     targetRevision: main
-    path: kubernetes/foundry/manifests/cloudflared
+    path: kubernetes/gr-foundry/manifests/cloudflared
   destination:
     server: https://kubernetes.default.svc
     namespace: cloudflared

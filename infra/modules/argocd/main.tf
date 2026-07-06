@@ -1,5 +1,5 @@
 # ArgoCD installed via Helm. This is the bootstrap install — ArgoCD takes
-# over self-management once the root Application (kubernetes/prod/bootstrap/root.yaml)
+# over self-management once the root Application (kubernetes/gr-prod/bootstrap/root.yaml)
 # is kubectl-apply'd. From that point, even ArgoCD upgrades happen via Git.
 #
 # SSO (Sentinel OIDC) and RBAC live in the chart values below so a single
@@ -48,7 +48,7 @@ resource "helm_release" "argocd" {
         # Pin every ArgoCD component to the on-demand baseline NodePool.
         # GitOps needs to stay up to drive recovery when the spot pool
         # churns; on-demand is more expensive but worth it for the
-        # control plane. See kubernetes/prod/manifests/on-demand-nodepool/.
+        # control plane. See kubernetes/gr-prod/manifests/on-demand-nodepool/.
         nodeSelector = {
           "capacity-type" = "on-demand-baseline"
         }
