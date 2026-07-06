@@ -3,16 +3,19 @@
 # the Cloudflare edge. Host-based routing to the kerbecs gateway, which
 # then routes to core/oauth/discord/saml/google/web internally.
 #
-# The public DNS record for sentinel-v5.gauchoracing.com is managed by
-# Terraform (foundry.tf) as a CNAME to <tunnel-uuid>.cfargotunnel.com —
-# external-dns is intentionally NOT annotating this Ingress, so the
-# record stays terraform-owned during and after cutover.
+# DNS is managed by the foundry external-dns instance:
+#   - hostname is derived from spec.rules[].host
+#   - cloudflare-proxied annotation flips the CF record to orange-cloud
+#   - the record's CNAME target comes from external-dns's
+#     --default-targets flag (points at the gr-foundry tunnel)
 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: sentinel
   namespace: sentinel
+  annotations:
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
 spec:
   ingressClassName: traefik
   rules:

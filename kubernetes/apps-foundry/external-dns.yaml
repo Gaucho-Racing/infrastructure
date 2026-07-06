@@ -1,0 +1,99 @@
+# external-dns for the foundry k3s cluster.
+#
+# Watches Ingress resources in this cluster and reconciles matching
+# Cloudflare DNS records. Because the foundry Traefik service is
+# behind a Cloudflare Tunnel (see infra/environments/prod/foundry.tf),
+# every record it writes needs to CNAME to <tunnel-id>.cfargotunnel.com
+# rather than the LB status field's node IPs — that's what --default-targets
+# does below.
+#
+# Multi-cluster: this instance uses txtOwnerId=gr-foundry so it only
+# manages records it wrote itself. A second on-prem cluster later gets
+# its own external-dns Application with a different txtOwnerId and its
+# own tunnel target; the two never touch each other's records.
+#
+# Manual one-time bootstrap after this Application first syncs:
+#
+#   kubectl -n external-dns create secret generic cloudflare-api-token \
+#     --from-literal=api-token="$CLOUDFLARE_API_TOKEN"
+#
+#   kubectl -n external-dns create configmap foundry-tunnel-target \
+#     --from-literal=target="$(cd ../../infra/environments/prod && terraform output -raw foundry_tunnel_id).cfargotunnel.com"
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: external-dns
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://kubernetes-sigs.github.io/external-dns
+    chart: external-dns
+    targetRevision: 1.18.0
+    helm:
+      releaseName: external-dns
+      values: |
+        provider:
+          name: cloudflare
+
+        domainFilters:
+          - gauchoracing.com
+
+        # sync = create + update + delete based on cluster state. Same
+        # policy as the EKS instance so behavior stays consistent while
+        # both clusters exist.
+        policy: sync
+
+        # TXT registry with a foundry-specific owner ID keeps the foundry
+        # external-dns from stepping on records the EKS instance owns
+        # (gr-prod) and vice-versa. Prefix distinguishes the ownership
+        # TXT record name too, so a `dig` on any record shows which
+        # cluster owns it.
+        registry: txt
+        txtOwnerId: gr-foundry
+        txtPrefix: fdry-
+
+        # Watch Ingress only — no Service source, so a LoadBalancer
+        # Service can't accidentally publish itself.
+        sources:
+          - ingress
+
+        env:
+          - name: CF_API_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: cloudflare-api-token
+                key: api-token
+          # FOUNDRY_TUNNEL_TARGET is populated from a ConfigMap created
+          # by the manual bootstrap step above. Kubernetes substitutes
+          # $(VAR) in container args at pod start, so the tunnel UUID
+          # flows into --default-targets without needing to be in git.
+          - name: FOUNDRY_TUNNEL_TARGET
+            valueFrom:
+              configMapKeyRef:
+                name: foundry-tunnel-target
+                key: target
+
+        extraArgs:
+          # Force every record this instance writes to CNAME the tunnel,
+          # regardless of what the Ingress's status.loadBalancer field
+          # says. Traefik on k3s advertises node IPs there via klipper-lb;
+          # those aren't publicly routable and are irrelevant since
+          # traffic arrives through the tunnel anyway.
+          - "--default-targets=$(FOUNDRY_TUNNEL_TARGET)"
+
+        logLevel: info
+        logFormat: json
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: external-dns
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
