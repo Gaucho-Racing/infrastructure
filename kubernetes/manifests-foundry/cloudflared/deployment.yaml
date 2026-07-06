@@ -1,0 +1,81 @@
+# cloudflared: outbound Cloudflare Tunnel connector.
+#
+# One tunnel (gr-foundry) fronts every gauchoracing.com hostname routed
+# to this cluster. Tunnel + per-hostname routes + DNS records are all
+# terraform-managed (see infra/environments/prod/foundry.tf) — this
+# Deployment just runs the connector.
+#
+# Manual bootstrap after this Application first syncs — the Secret's
+# TUNNEL_TOKEN comes from `terraform output -raw foundry_tunnel_token`:
+#
+#   kubectl -n cloudflared create secret generic cloudflared-secrets \
+#     --from-literal=TUNNEL_TOKEN="$(cd ../../infra/environments/prod && terraform output -raw foundry_tunnel_token)"
+#
+# Two replicas so a pod restart doesn't drop the tunnel; each opens
+# its own set of connections to the Cloudflare edge and CF load-balances
+# across them automatically.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudflared
+  namespace: cloudflared
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cloudflared
+  template:
+    metadata:
+      labels:
+        app: cloudflared
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          minDomains: 2
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: cloudflared
+      containers:
+        - name: cloudflared
+          # Pin to a specific tag; bump manually when reviewing releases.
+          # https://github.com/cloudflare/cloudflared/releases
+          image: cloudflare/cloudflared:2025.11.1
+          args:
+            - tunnel
+            - --no-autoupdate
+            - --metrics
+            - 0.0.0.0:2000
+            - run
+          env:
+            - name: TUNNEL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflared-secrets
+                  key: TUNNEL_TOKEN
+          ports:
+            - containerPort: 2000
+              name: metrics
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: 2000
+            failureThreshold: 1
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 2000
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi

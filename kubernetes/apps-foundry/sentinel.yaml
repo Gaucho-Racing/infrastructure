@@ -1,0 +1,48 @@
+# Sentinel on the foundry k3s cluster. Same manifest set as the EKS tree
+# (kubernetes/manifests/sentinel/), diverging only in ingress.yaml
+# (Traefik instead of ALB) and postgres.yaml (public Cloudflare hostname
+# for the gr-postgres EC2 instead of the internal EC2 hostname).
+#
+# Manual Secret needed once after this Application first syncs. Copy the
+# external-facing values from the EKS cluster verbatim so identity state
+# (Discord, INTERNAL_BOOTSTRAP_SECRET) stays coherent across environments
+# during cutover:
+#
+#   kubectl --context eks -n sentinel get secret sentinel-secrets -o yaml \
+#     | grep -v '^\s*resourceVersion:\|^\s*uid:\|^\s*creationTimestamp:\|^\s*namespace:' \
+#     | kubectl --context foundry apply -f -
+#
+# Or create from scratch:
+#
+#   kubectl -n sentinel create secret generic sentinel-secrets \
+#     --from-literal=POSTGRES_PASSWORD="$(cd ../../infra/environments/prod && terraform output -raw postgres_password)" \
+#     --from-literal=INTERNAL_BOOTSTRAP_SECRET=... \
+#     --from-literal=KERBECS_PASSWORD=... \
+#     --from-literal=DISCORD_TOKEN=... \
+#     --from-literal=DISCORD_CLIENT_ID=... \
+#     --from-literal=DISCORD_CLIENT_SECRET=... \
+#     --from-literal=GOOGLE_SERVICE_ACCOUNT=...
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: sentinel
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Gaucho-Racing/infrastructure.git
+    targetRevision: main
+    path: kubernetes/manifests-foundry/sentinel
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: sentinel
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

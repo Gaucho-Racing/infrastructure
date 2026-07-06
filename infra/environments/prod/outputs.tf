@@ -86,3 +86,14 @@ output "clickhouse_admin_password" {
   value       = module.clickhouse.admin_password
   sensitive   = true
 }
+
+output "foundry_tunnel_id" {
+  description = "UUID of the gr-foundry Cloudflare tunnel. DNS CNAMEs point at <id>.cfargotunnel.com."
+  value       = cloudflare_zero_trust_tunnel_cloudflared.foundry.id
+}
+
+output "foundry_tunnel_token" {
+  description = "Tunnel connector token for the gr-foundry tunnel. Consumed by the cloudflared pods on the on-prem cluster via TUNNEL_TOKEN. Read with `terraform output -raw foundry_tunnel_token`."
+  value       = data.cloudflare_zero_trust_tunnel_cloudflared_token.foundry.token
+  sensitive   = true
+}
