@@ -1,9 +1,8 @@
-# Public Ingress for argocd.gauchoracing.com on the foundry cluster.
-# Same pattern as sentinel — Traefik + external-dns + tunnel.
-#
-# The ArgoCD install itself is managed outside GitOps (kubectl-applied
-# from the upstream install manifest on foundry). This Application only
-# owns the public Ingress resource.
+# ArgoCD-managed Application that deploys the Ingress for ArgoCD itself.
+# Self-referential but works fine — ArgoCD reconciles its own Ingress
+# resource from this repo, the AWS Load Balancer Controller provisions
+# the ALB, external-dns creates the Cloudflare record, and you reach
+# the UI at https://argocd.internal.gauchoracing.com.
 
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -17,7 +16,7 @@ spec:
   source:
     repoURL: https://github.com/Gaucho-Racing/infrastructure.git
     targetRevision: main
-    path: kubernetes/manifests-foundry/argocd-server-ingress
+    path: kubernetes/prod/manifests/argocd-server-ingress
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
@@ -25,5 +24,3 @@ spec:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - ServerSideApply=true

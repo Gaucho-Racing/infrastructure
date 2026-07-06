@@ -38,7 +38,7 @@ spec:
   source:
     repoURL: https://github.com/Gaucho-Racing/infrastructure.git
     targetRevision: main
-    path: kubernetes/manifests/mapache
+    path: kubernetes/prod/manifests/mapache
   destination:
     server: https://kubernetes.default.svc
     namespace: mapache

@@ -18,7 +18,7 @@
 #     --from-literal=api-token="$CLOUDFLARE_API_TOKEN"
 #
 #   kubectl -n external-dns create configmap foundry-tunnel-target \
-#     --from-literal=target="$(cd ../../infra/environments/prod && terraform output -raw foundry_tunnel_id).cfargotunnel.com"
+#     --from-literal=target="$(terraform -chdir=infra/environments/prod && terraform output -raw foundry_tunnel_id).cfargotunnel.com"
 
 apiVersion: argoproj.io/v1alpha1
 kind: Application

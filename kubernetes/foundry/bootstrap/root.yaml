@@ -5,16 +5,16 @@
 # root — one ArgoCD instance, two independently-reconciled trees. Apply
 # once manually on the foundry cluster after the initial cutover prep:
 #
-#   kubectl --context foundry apply -f kubernetes/bootstrap/root-foundry.yaml
+#   kubectl --context foundry apply -f kubernetes/foundry/bootstrap/root.yaml
 #
-# From then on, ArgoCD reads kubernetes/apps-foundry/ from this repo and
+# From then on, ArgoCD reads kubernetes/foundry/apps/ from this repo and
 # reconciles every Application resource it finds there.
 #
-# EKS is still managed by kubernetes/bootstrap/root.yaml → kubernetes/apps/.
+# EKS is still managed by kubernetes/prod/bootstrap/root.yaml → kubernetes/prod/apps/.
 # The two roots do NOT share a cluster; each root's ArgoCD is scoped to
 # its own cluster via server: https://kubernetes.default.svc.
 #
-# See kubernetes/apps-foundry/*.yaml for the per-stack manual bootstrap
+# See kubernetes/foundry/apps/*.yaml for the per-stack manual bootstrap
 # steps (secret creation, DB creation, etc.).
 
 apiVersion: argoproj.io/v1alpha1
@@ -29,7 +29,7 @@ spec:
   source:
     repoURL: https://github.com/Gaucho-Racing/infrastructure.git
     targetRevision: main
-    path: kubernetes/apps-foundry
+    path: kubernetes/foundry/apps
     directory:
       recurse: true
   destination:

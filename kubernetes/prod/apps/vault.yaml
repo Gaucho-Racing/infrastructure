@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/Gaucho-Racing/infrastructure.git
     targetRevision: main
-    path: kubernetes/manifests/vault
+    path: kubernetes/prod/manifests/vault
   destination:
     server: https://kubernetes.default.svc
     namespace: vault

@@ -3,13 +3,13 @@
 # After ArgoCD is installed via terraform (infra/modules/argocd), apply
 # this once manually:
 #
-#   kubectl apply -f kubernetes/bootstrap/root.yaml
+#   kubectl apply -f kubernetes/prod/bootstrap/root.yaml
 #
-# From then on, ArgoCD reads kubernetes/apps/ from this repo and
+# From then on, ArgoCD reads kubernetes/prod/apps/ from this repo and
 # reconciles every Application resource it finds there. Adding a new
 # managed system (Sentinel, observability stack, etc.) is just:
 #
-#   1. Add a new Application YAML under kubernetes/apps/
+#   1. Add a new Application YAML under kubernetes/prod/apps/
 #   2. Commit + push
 #   3. ArgoCD picks it up on next sync (~3 min default, or instant via
 #      `argocd app sync root`)
@@ -29,7 +29,7 @@ spec:
   source:
     repoURL: https://github.com/Gaucho-Racing/infrastructure.git
     targetRevision: main
-    path: kubernetes/apps
+    path: kubernetes/prod/apps
     directory:
       recurse: true
   destination:
