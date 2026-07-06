@@ -1,0 +1,32 @@
+# Public Ingress for the foundry cluster's ArgoCD UI at
+# argocd.gauchoracing.com. Traefik receives HTTP forwarded by the
+# cloudflared tunnel; TLS terminates at the Cloudflare edge.
+#
+# argocd-server serves plain HTTP on port 80 → targetPort 8080, so no
+# `server.insecure` patch is needed on the existing foundry ArgoCD install.
+#
+# DNS is managed by the foundry external-dns instance:
+#   - hostname derived from spec.rules[].host
+#   - cloudflare-proxied annotation flips the CF record orange
+#   - target is the gr-foundry tunnel via external-dns --default-targets
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server-public
+  namespace: argocd
+  annotations:
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: argocd.gauchoracing.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocd-server
+                port:
+                  number: 80
