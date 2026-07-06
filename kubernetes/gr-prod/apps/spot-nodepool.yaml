@@ -19,7 +19,7 @@ spec:
   source:
     repoURL: https://github.com/Gaucho-Racing/infrastructure.git
     targetRevision: main
-    path: kubernetes/manifests/spot-nodepool
+    path: kubernetes/gr-prod/manifests/spot-nodepool
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system

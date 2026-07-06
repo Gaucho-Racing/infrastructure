@@ -6,7 +6,7 @@
 # Manual one-time Secret bootstrap after this first syncs:
 #
 #   kubectl -n cloudflared create secret generic cloudflared-secrets \
-#     --from-literal=TUNNEL_TOKEN="$(cd ../../infra/environments/prod && terraform output -raw foundry_tunnel_token)"
+#     --from-literal=TUNNEL_TOKEN="$(terraform -chdir=infra/environments/prod && terraform output -raw foundry_tunnel_token)"
 
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -20,7 +20,7 @@ spec:
   source:
     repoURL: https://github.com/Gaucho-Racing/infrastructure.git
     targetRevision: main
-    path: kubernetes/manifests-foundry/cloudflared
+    path: kubernetes/gr-foundry/manifests/cloudflared
   destination:
     server: https://kubernetes.default.svc
     namespace: cloudflared

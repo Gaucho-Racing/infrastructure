@@ -17,7 +17,7 @@ spec:
   source:
     repoURL: https://github.com/Gaucho-Racing/infrastructure.git
     targetRevision: main
-    path: kubernetes/manifests-foundry/argocd-server-ingress
+    path: kubernetes/gr-foundry/manifests/argocd-server-ingress
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

@@ -1,7 +1,7 @@
 # Foundry (on-prem k3s) cutover resources — the shared Cloudflare Tunnel
 # that connects the on-prem cluster to Cloudflare. Public DNS records for
 # individual hostnames are managed by external-dns on the foundry cluster
-# (see kubernetes/apps-foundry/external-dns.yaml), not here.
+# (see kubernetes/gr-foundry/apps/external-dns.yaml), not here.
 #
 # Design: the tunnel has a single catch-all ingress rule that forwards
 # ALL traffic to the Traefik service. Traefik does Host-based routing
@@ -14,7 +14,7 @@
 # Compute (EKS + ALB + ACM origin cert) still lives in main.tf. Once
 # every hostname is migrated off EKS and the on-prem stack has soaked,
 # delete module.eks / module.argocd / module.origin_cert from main.tf
-# and remove kubernetes/apps/ from the repo.
+# and remove kubernetes/gr-prod/apps/ from the repo.
 #
 # Off-cluster data services (gr-postgres, gr-mqtt, gr-clickhouse) stay
 # in AWS — the on-prem cluster reaches them over the public internet via
@@ -31,20 +31,24 @@
 #          --from-literal=target="$(terraform output -raw foundry_tunnel_id).cfargotunnel.com"
 #        kubectl -n external-dns create secret generic cloudflare-api-token \
 #          --from-literal=api-token="$CLOUDFLARE_API_TOKEN"
-#   3. Apply kubernetes/bootstrap/root-foundry.yaml on the foundry
-#      ArgoCD, populate sentinel-secrets, wait for pods Healthy.
+#   3. Apply kubernetes/gr-foundry/bootstrap/root.yaml on the foundry
+#      ArgoCD, wait for cloudflared / external-dns / argocd-server-ingress
+#      Applications to reach Healthy.
 #   4. Cutover for one hostname:
-#      a. Delete the existing sentinel-v5.gauchoracing.com record via CF
-#         dashboard (or scale EKS external-dns to 0 first — it'll take
-#         its four records with it).
-#      b. Foundry external-dns notices the sentinel Ingress with no
+#      a. Scale EKS external-dns to 0 so it stops recreating its records
+#         (kubectl --context <eks> -n external-dns scale deploy
+#         external-dns --replicas=0).
+#      b. Delete the hostname's CNAME + `ext-cname-<hostname>` TXT
+#         records via CF dashboard.
+#      c. Foundry external-dns notices the matching Ingress with no
 #         record, writes CNAME → <tunnel-id>.cfargotunnel.com within
 #         its --interval (1m default).
-#      c. Traffic starts landing on foundry within CF TTL.
-#   5. Bake. Add mapache/vault/argocd in follow-up PRs — each is a copy
-#      of manifests/<svc>/ into manifests-foundry/<svc>/ with two file
-#      changes (ingress.yaml → Traefik + external-dns annotation,
-#      postgres.yaml → public hostname). No terraform edit.
+#      d. Traffic starts landing on foundry within CF TTL.
+#   5. Bake. Add each remaining hostname (sentinel-v5 / mapache / vault)
+#      in a follow-up PR — copy gr-prod/manifests/<svc>/ into
+#      gr-foundry/manifests/<svc>/ with two file changes (ingress.yaml →
+#      Traefik + external-dns annotation, postgres.yaml → public
+#      hostname). No terraform edit needed.
 
 # Account ID for the tunnel resources. The CF API token used by the
 # provider is scoped to a single account — return that account's ID.
