@@ -1,0 +1,54 @@
+# Kustomize entrypoint — ArgoCD auto-detects this file and runs
+# `kustomize build` instead of treating the dir as a flat manifest set.
+#
+# The `images` block below is the single source of truth for mapache
+# service versions. Bumping a release looks like:
+#
+#   kustomize edit set image \
+#     ghcr.io/gaucho-racing/mapache/auth=ghcr.io/gaucho-racing/mapache/auth:3.4.0
+#
+# (Run from this directory; the per-service publish workflows will
+# eventually wrap this across all services on tag push.) That edit only
+# touches this file — the Deployment YAMLs stay unchanged, so the diff
+# in a release PR is one block.
+#
+# kerbecs is on its own version stream from the mapache services —
+# bump it separately when there's a reason to.
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - configmap-kerbecs.yaml
+  - postgres.yaml
+  - kerbecs.yaml
+  - auth.yaml
+  - vehicle.yaml
+  - gr26.yaml
+  - live.yaml
+  - query.yaml
+  - foreman.yaml
+  - dashboard.yaml
+  - ingress.yaml
+
+images:
+  - name: ghcr.io/gaucho-racing/mapache/auth
+    newTag: 3.9.6
+  - name: ghcr.io/gaucho-racing/mapache/vehicle
+    newTag: 3.9.6
+  - name: ghcr.io/gaucho-racing/mapache/gr26
+    newTag: 3.9.6
+  - name: ghcr.io/gaucho-racing/mapache/live
+    newTag: 3.9.6
+  - name: ghcr.io/gaucho-racing/mapache/query
+    newTag: 3.9.6
+  # Foreman is its own project now (github.com/gaucho-racing/Foreman)
+  # with its own release cadence. Track via its semver tags, not
+  # mapache's. Mapache services keep tracking together via newTag above.
+  - name: ghcr.io/gaucho-racing/foreman
+    newTag: 2.0.2
+  - name: ghcr.io/gaucho-racing/mapache/dashboard
+    newTag: 3.9.6
+  - name: bk1031/kerbecs
+    newTag: 3.2.0

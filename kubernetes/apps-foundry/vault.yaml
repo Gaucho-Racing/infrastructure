@@ -1,0 +1,35 @@
+# Vault on the foundry k3s cluster. Same manifest set as the EKS tree
+# (kubernetes/manifests/vault/), diverging only in ingress.yaml (Traefik)
+# and postgres.yaml (public Cloudflare hostname).
+#
+# Manual Secret needed once after first sync:
+#
+#   kubectl -n vault create secret generic vault-secrets \
+#     --from-literal=POSTGRES_PASSWORD="$(cd ../../infra/environments/prod && terraform output -raw postgres_password)" \
+#     --from-literal=KERBECS_PASSWORD=... \
+#     --from-literal=SENTINEL_CLIENT_SECRET=... \
+#     --from-literal=SENTINEL_SA_TOKEN=...
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vault
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Gaucho-Racing/infrastructure.git
+    targetRevision: main
+    path: kubernetes/manifests-foundry/vault
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: vault
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

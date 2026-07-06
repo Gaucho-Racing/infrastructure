@@ -1,0 +1,33 @@
+# cloudflared: outbound tunnel connector. Fronts every public
+# gauchoracing.com hostname on this cluster — the tunnel and its route
+# table live in Terraform (foundry.tf), the pod that terminates the
+# tunnel here lives in this Application.
+#
+# Manual one-time Secret bootstrap after this first syncs:
+#
+#   kubectl -n cloudflared create secret generic cloudflared-secrets \
+#     --from-literal=TUNNEL_TOKEN="$(cd ../../infra/environments/prod && terraform output -raw foundry_tunnel_token)"
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudflared
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Gaucho-Racing/infrastructure.git
+    targetRevision: main
+    path: kubernetes/manifests-foundry/cloudflared
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cloudflared
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

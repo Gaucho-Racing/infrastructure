@@ -1,0 +1,27 @@
+# vault-k8s-operator: mirrors the EKS install (kubernetes/apps/vault-k8s-operator.yaml).
+# Same upstream chart, same version pin — the operator syncs secrets from
+# vault-server into the cluster via VaultSecret CRDs.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vault-k8s-operator
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Gaucho-Racing/vault-k8s-operator.git
+    targetRevision: v1.1.0
+    path: config/default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: vault-k8s-operator-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

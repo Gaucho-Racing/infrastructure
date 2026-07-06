@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vault
+  namespace: vault
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vault
+  template:
+    metadata:
+      labels:
+        app: vault
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          minDomains: 2
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: vault
+      containers:
+        - name: vault
+          image: ghcr.io/gaucho-racing/vault-server:latest
+          ports:
+            - containerPort: 9999
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            - name: ENV
+              value: PROD
+            - name: PORT
+              value: "9999"
+            - name: DATABASE_HOST
+              value: postgres.vault.svc.cluster.local
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_USER
+              value: postgres
+            - name: DATABASE_NAME
+              value: vault
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: vault-secrets
+                  key: POSTGRES_PASSWORD
+            - name: SENTINEL_URL
+              value: https://sentinel-v5.gauchoracing.com
+            - name: SENTINEL_CLIENT_ID
+              value: Ehf9Nl8SVs9w
+            - name: SENTINEL_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: vault-secrets
+                  key: SENTINEL_CLIENT_SECRET
+            - name: SENTINEL_SA_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vault-secrets
+                  key: SENTINEL_SA_TOKEN
+            - name: SENTINEL_REDIRECT_URI
+              value: https://vault.gauchoracing.com/auth/login
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vault
+  namespace: vault
+spec:
+  selector:
+    app: vault
+  ports:
+    - port: 9999
+      targetPort: 9999

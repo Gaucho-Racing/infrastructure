@@ -1,0 +1,35 @@
+# Public Ingress for the ArgoCD UI on the foundry k3s cluster.
+# The foundry-infra repo already manages an internal Ingress
+# (argocd.internal.bk1031.dev) — this one adds the public gauchoracing.com
+# hostname. Distinct Ingress name (argocd-server-public) to avoid colliding
+# with the foundry-managed argocd-server Ingress in the same namespace.
+#
+# Requires the ArgoCD Helm values to have `server.insecure: true` so the
+# argocd-server Service serves plain HTTP on port 80 (traffic path is
+# Cloudflare edge → cloudflared → Traefik → argocd-server, all HTTP).
+# If your foundry-infra argocd install doesn't have this, patch
+# argocd-cmd-params-cm:
+#   kubectl -n argocd patch configmap argocd-cmd-params-cm \
+#     --patch '{"data":{"server.insecure":"true"}}'
+#   kubectl -n argocd rollout restart deployment argocd-server
+#
+# DNS for argocd.gauchoracing.com is managed by Terraform (foundry.tf).
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server-public
+  namespace: argocd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: argocd.gauchoracing.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocd-server
+                port:
+                  number: 80

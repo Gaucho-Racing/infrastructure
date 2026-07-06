@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saml
+  namespace: sentinel
+spec:
+  # Single replica for now: on the very first boot the service generates and
+  # persists its SAML signing key + self-signed cert (saml_signing_key table).
+  # With >1 replica racing an empty table, two pods could each insert an active
+  # key and serve different certs, breaking SP signature verification. Once the
+  # row exists every replica loads the same key, so this can safely go to 2
+  # after the first successful deploy. The IdP is interactive and low-volume, so
+  # one replica is fine in the meantime.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: saml
+  template:
+    metadata:
+      labels:
+        app: saml
+    spec:
+      # Topology spread — see comment in core.yaml. Inert at replicas: 1,
+      # kept so scaling up later spreads pods without an edit here.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          minDomains: 2
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: saml
+      containers:
+        - name: saml
+          # Tag is set by kustomization.yaml's images block.
+          image: ghcr.io/gaucho-racing/sentinel-saml:latest
+          ports:
+            - containerPort: 9996
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            - name: ENV
+              value: PROD
+            - name: PORT
+              value: "9996"
+            - name: DATABASE_HOST
+              value: postgres.sentinel.svc.cluster.local
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_USER
+              value: postgres
+            - name: DATABASE_NAME
+              value: sentinel
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sentinel-secrets
+                  key: POSTGRES_PASSWORD
+            # Resolve inter-service calls through the kerbecs gateway's admin
+            # API (replaces the rincon registry). Same admin creds the kerbecs
+            # deployment uses.
+            - name: KERBECS_ENDPOINT
+              value: http://kerbecs.sentinel.svc.cluster.local:10300
+            - name: KERBECS_USER
+              value: admin
+            - name: KERBECS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sentinel-secrets
+                  key: KERBECS_PASSWORD
+            # Public base URL. Doubles as the SAML IdP entityID (the metadata
+            # URL is derived from it), so it MUST match core's ISSUER exactly
+            # and stay byte-stable — changing it invalidates trust with every
+            # registered service provider.
+            - name: ISSUER
+              value: https://sentinel-v5.gauchoracing.com
+            # Shared secret exchanged at startup for this service's
+            # pre-seeded bearer JWT. Same value as every other
+            # sentinel-* deployment.
+            - name: INTERNAL_BOOTSTRAP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: sentinel-secrets
+                  key: INTERNAL_BOOTSTRAP_SECRET
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: saml
+  namespace: sentinel
+spec:
+  selector:
+    app: saml
+  ports:
+    - port: 9996
+      targetPort: 9996

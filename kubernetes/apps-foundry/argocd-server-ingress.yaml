@@ -1,0 +1,25 @@
+# Adds the public argocd.gauchoracing.com Ingress to the argocd namespace
+# on the foundry k3s cluster. Complements (doesn't replace) the internal
+# argocd.internal.bk1031.dev Ingress that foundry-infra manages in the
+# same namespace — different Ingress names, both point at argocd-server.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-server-ingress
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Gaucho-Racing/infrastructure.git
+    targetRevision: main
+    path: kubernetes/manifests-foundry/argocd-server-ingress
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

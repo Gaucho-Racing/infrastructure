@@ -1,0 +1,123 @@
+# gr26: telemetry ingest + the foreman worker pool.
+#
+# replicas=1 — the worker pool claims foreman jobs by lease, so scaling
+# horizontally is supported once we know how much concurrency the Epic
+# Shelter ingest needs. Start single-replica to keep the live MQTT
+# subscriber simple.
+#
+# MQTT broker lives on the gr-mqtt EC2 outside the cluster. Pods reach
+# it over the public hostname (gr-mqtt.gauchoracing.com); throughput is
+# low enough that hairpinning out through the NAT gateway is fine.
+# Auth uses the shared mapache-fleet credential (MQTT_USER=mapache).
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gr26
+  namespace: mapache
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: gr26
+  template:
+    metadata:
+      labels:
+        app: gr26
+    spec:
+      # Spread across at least 2 nodes (minDomains) but tolerate skew
+      # up to 1 (so 3 replicas → [2,1], not forced [1,1,1]).
+      topologySpreadConstraints:
+        - maxSkew: 1
+          minDomains: 2
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: gr26
+      containers:
+        - name: gr26
+          image: ghcr.io/gaucho-racing/mapache/gr26:latest
+          ports:
+            - containerPort: 7005
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          env:
+            - name: ENV
+              value: PROD
+            - name: PORT
+              value: "7005"
+            # Telemetry storage (signal, gr26_can, ping) moved off Postgres
+            # to ClickHouse — gr26 holds no Postgres connection anymore.
+            # The gr26 process auto-creates the mapache database on first
+            # connect via the always-present `default` DB.
+            - name: CLICKHOUSE_HOST
+              value: gr-clickhouse.gauchoracing.com
+            - name: CLICKHOUSE_PORT
+              value: "9000"
+            - name: CLICKHOUSE_USER
+              value: admin
+            - name: CLICKHOUSE_DATABASE
+              value: mapache
+            - name: CLICKHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: CLICKHOUSE_PASSWORD
+            - name: KERBECS_ENDPOINT
+              value: http://kerbecs.mapache.svc.cluster.local:10300
+            - name: KERBECS_USER
+              value: admin
+            - name: KERBECS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: KERBECS_PASSWORD
+            - name: MQTT_HOST
+              value: gr-mqtt.gauchoracing.com
+            - name: MQTT_PORT
+              value: "1883"
+            - name: MQTT_USER
+              value: mapache
+            - name: MQTT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: MQTT_PASSWORD
+            - name: FOREMAN_ENDPOINT
+              value: http://foreman.mapache.svc.cluster.local:7011
+            - name: NUM_WORKERS
+              value: "4"
+            - name: SHELTER_S3_BUCKET
+              value: gaucho-racing
+            - name: SHELTER_S3_REGION
+              value: us-west-2
+            - name: SHELTER_S3_PREFIX
+              value: epic-shelter/tcm-26/
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: AWS_ACCESS_KEY_ID
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: AWS_SECRET_ACCESS_KEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gr26
+  namespace: mapache
+spec:
+  selector:
+    app: gr26
+  ports:
+    - port: 7005
+      targetPort: 7005
