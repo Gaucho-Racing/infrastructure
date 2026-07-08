@@ -1,0 +1,28 @@
+# Public entrypoint on the foundry k3s cluster. Traefik receives plain
+# HTTP forwarded by the in-cluster cloudflared tunnel; TLS terminates at
+# the Cloudflare edge. Host-based routing to the kerbecs gateway, which
+# then routes to core/oauth/discord/saml/google/web internally.
+#
+# DNS is managed by the foundry external-dns instance — cloudflare-proxied
+# flips the record orange, target comes from --default-targets (tunnel).
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sentinel
+  namespace: sentinel
+  annotations:
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: sentinel-v5.gauchoracing.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kerbecs
+                port:
+                  number: 10310

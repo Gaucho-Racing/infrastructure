@@ -1,0 +1,15 @@
+# In-cluster handle for the gr-postgres EC2. Same instance as mapache +
+# vault; isolated by DB name (sentinel).
+#
+# From on-prem, resolves via the Cloudflare A record
+# gr-postgres.gauchoracing.com to the EIP. Traffic goes over the public
+# internet on 5432; scram-sha-256 is the only gate.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: sentinel
+spec:
+  type: ExternalName
+  externalName: gr-postgres.gauchoracing.com

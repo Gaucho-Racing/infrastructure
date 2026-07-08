@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: core
+  namespace: sentinel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: core
+  template:
+    metadata:
+      labels:
+        app: core
+    spec:
+      containers:
+        - name: core
+          image: ghcr.io/gaucho-racing/sentinel-core:latest
+          ports:
+            - containerPort: 9999
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          # Only truly-structural env stays plain here (deployment env,
+          # port that must match containerPort, universal Postgres port).
+          # Everything else — including plain URLs and DB names — comes
+          # from sentinel-secrets, which is materialized by the
+          # VaultSecretSync in this namespace. See vaultsecretsync.yaml.
+          envFrom:
+            - secretRef:
+                name: sentinel-secrets
+          env:
+            - name: ENV
+              value: PROD
+            - name: PORT
+              value: "9999"
+            - name: DATABASE_PORT
+              value: "5432"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: core
+  namespace: sentinel
+spec:
+  selector:
+    app: core
+  ports:
+    - port: 9999
+      targetPort: 9999
