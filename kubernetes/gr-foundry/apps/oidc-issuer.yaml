@@ -1,0 +1,41 @@
+# Exposes the gr-foundry k3s API server's OIDC discovery endpoints
+# publicly at gr-foundry.gauchoracing.com. This lets external OIDC
+# relying parties (Vault, and anything else added later) validate
+# ServiceAccount tokens minted by this cluster without needing to trust
+# the cluster CA out-of-band.
+#
+# Companion to a k3s server config change — /etc/rancher/k3s/config.yaml
+# on foundry-01 must set:
+#
+#   kube-apiserver-arg:
+#     - "service-account-issuer=https://gr-foundry.gauchoracing.com"
+#     - "service-account-issuer=https://kubernetes.default.svc.cluster.local"  # grace period
+#     - "api-audiences=https://gr-foundry.gauchoracing.com,gaucho-racing-vault"
+#
+# followed by `sudo systemctl restart k3s`. The k3s config change is
+# separate from GitOps because it lives on the node, not in the API.
+# See the runbook comment in the PR description.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: oidc-issuer
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Gaucho-Racing/infrastructure.git
+    targetRevision: main
+    path: kubernetes/gr-foundry/manifests/oidc-issuer
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: oidc-issuer
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

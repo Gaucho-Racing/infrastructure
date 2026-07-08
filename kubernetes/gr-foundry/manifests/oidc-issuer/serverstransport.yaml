@@ -1,0 +1,27 @@
+# Teaches Traefik how to talk HTTPS to the k8s API server. The API
+# server's cert is signed by the cluster CA, which isn't in Traefik's
+# system trust store. Two options:
+#
+#   1. Mount the cluster CA (via a Secret copied from the kube-root-ca.crt
+#      ConfigMap) and set rootCAsSecrets — proper, requires a Secret we
+#      have to keep in sync with the CA.
+#   2. insecureSkipVerify: true — skip cert validation.
+#
+# We use (2). Justification: the traffic path Traefik → k8s API server is
+# entirely inside the cluster's pod network. Any attacker capable of
+# intercepting this traffic already has a foothold inside the cluster;
+# the k8s API server cert would not meaningfully protect against that
+# threat model. The transport is still TLS-encrypted; only the identity
+# check is skipped.
+#
+# serverName is still set so SNI works correctly (the API server can
+# select the right cert if it serves multiple).
+
+apiVersion: traefik.io/v1alpha1
+kind: ServersTransport
+metadata:
+  name: kubernetes-api
+  namespace: oidc-issuer
+spec:
+  serverName: kubernetes.default.svc.cluster.local
+  insecureSkipVerify: true

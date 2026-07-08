@@ -1,0 +1,22 @@
+# Grant anonymous read access to the two public OIDC endpoints
+# (/.well-known/openid-configuration and /openid/v1/jwks). By default
+# k8s gates these behind the system:service-account-issuer-discovery
+# ClusterRole, which is only bound to system:serviceaccounts. Adding
+# system:unauthenticated makes them reachable without a token — the
+# standard pattern for public OIDC federation (matches how EKS and GKE
+# expose these endpoints).
+#
+# No secret content is exposed. JWKS is intentionally public.
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: oidc-discovery-anonymous
+subjects:
+  - kind: Group
+    apiGroup: rbac.authorization.k8s.io
+    name: system:unauthenticated
+roleRef:
+  kind: ClusterRole
+  name: system:service-account-issuer-discovery
+  apiGroup: rbac.authorization.k8s.io
