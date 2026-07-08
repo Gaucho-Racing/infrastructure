@@ -19,9 +19,9 @@ metadata:
   namespace: oidc-issuer
   annotations:
     external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
-    # Tells Traefik to use HTTPS to the backend Service, with the trust
-    # config from the ServersTransport CRD in this namespace.
-    traefik.ingress.kubernetes.io/service.serverstransport: oidc-issuer-kubernetes-api@kubernetescrd
+    # ServersTransport binding is on the backend Service, not here —
+    # see service.yaml. Traefik's Ingress provider picks up the
+    # annotation from the Service, not the Ingress.
 spec:
   ingressClassName: traefik
   rules:

@@ -2,12 +2,19 @@
 # Service in the default namespace. Ingress backends must be Services in
 # the same namespace as the Ingress; this shim lets us reference the API
 # server from an Ingress in the oidc-issuer namespace.
+#
+# The `serverstransport` annotation on the SERVICE (not the Ingress)
+# tells Traefik to use this cluster's ServersTransport CRD for the
+# backend TLS connection — needed because the k8s API server cert is
+# signed by the cluster CA, not a system-trusted CA.
 
 apiVersion: v1
 kind: Service
 metadata:
   name: kubernetes-api
   namespace: oidc-issuer
+  annotations:
+    traefik.ingress.kubernetes.io/service.serverstransport: oidc-issuer-kubernetes-api@kubernetescrd
 spec:
   type: ExternalName
   externalName: kubernetes.default.svc.cluster.local
