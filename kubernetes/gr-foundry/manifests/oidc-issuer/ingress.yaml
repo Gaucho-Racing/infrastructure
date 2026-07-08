@@ -1,0 +1,44 @@
+# Public Ingress that re-serves the API server's OIDC endpoints at a
+# publicly-signed hostname. Traefik terminates HTTP from cloudflared and
+# forwards HTTPS to the k8s API server using the ServersTransport above.
+#
+# Only two exact paths are exposed:
+#   - /.well-known/openid-configuration
+#   - /openid/v1/jwks
+# Nothing else at this hostname reaches the API server — no accidental
+# exposure of authenticated endpoints.
+#
+# DNS record for gr-foundry.gauchoracing.com is written by foundry
+# external-dns; --default-targets on that instance sets the CNAME to the
+# tunnel automatically.
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: oidc-issuer
+  namespace: oidc-issuer
+  annotations:
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+    # Tells Traefik to use HTTPS to the backend Service, with the trust
+    # config from the ServersTransport CRD in this namespace.
+    traefik.ingress.kubernetes.io/service.serverstransport: oidc-issuer-kubernetes-api@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: gr-foundry.gauchoracing.com
+      http:
+        paths:
+          - path: /.well-known/openid-configuration
+            pathType: Exact
+            backend:
+              service:
+                name: kubernetes-api
+                port:
+                  number: 443
+          - path: /openid/v1/jwks
+            pathType: Exact
+            backend:
+              service:
+                name: kubernetes-api
+                port:
+                  number: 443

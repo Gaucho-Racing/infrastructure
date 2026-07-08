@@ -1,0 +1,16 @@
+# ExternalName Service that resolves to the built-in kubernetes API
+# Service in the default namespace. Ingress backends must be Services in
+# the same namespace as the Ingress; this shim lets us reference the API
+# server from an Ingress in the oidc-issuer namespace.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubernetes-api
+  namespace: oidc-issuer
+spec:
+  type: ExternalName
+  externalName: kubernetes.default.svc.cluster.local
+  ports:
+    - port: 443
+      targetPort: 443
