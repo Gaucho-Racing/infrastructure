@@ -1,0 +1,24 @@
+# Enables Traefik to route to ExternalName Services. Off by default
+# (Traefik's own policy — reasoning: an ExternalName Service can point at
+# any hostname, so an Ingress backed by one could be used to proxy
+# traffic to arbitrary external hosts through the cluster). We need it
+# for the oidc-issuer Ingress to point at the built-in `kubernetes`
+# Service in the default namespace via a same-namespace ExternalName
+# shim.
+#
+# HelmChartConfig is a k3s-specific CRD. The k3s HelmChart controller
+# picks up a HelmChartConfig with the same name as an existing HelmChart
+# (traefik, in kube-system) and merges its valuesContent into the
+# Traefik Helm values on next reconcile. Traefik pod restarts to pick up
+# the change — brief ingress hiccup.
+
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    providers:
+      kubernetesIngress:
+        allowExternalNameServices: true
