@@ -34,6 +34,20 @@ spec:
               cpu: 500m
               memory: 512Mi
           env:
+            # Go's crypto/x509 in the vault-server alpine:3.19 runtime image
+            # doesn't reliably auto-discover the system CA bundle when
+            # making outbound HTTPS (e.g., to gr-foundry.gauchoracing.com for
+            # OIDC discovery). Setting SSL_CERT_FILE + SSL_CERT_DIR
+            # explicitly forces Go to load the bundle that Alpine ships,
+            # so TLS handshakes to public HTTPS origins succeed.
+            #
+            # Longer-term fix belongs in the vault-server Dockerfile:
+            # add `RUN apk --no-cache add ca-certificates` to the runtime
+            # stage. Until that lands, these env vars are the workaround.
+            - name: SSL_CERT_FILE
+              value: /etc/ssl/certs/ca-certificates.crt
+            - name: SSL_CERT_DIR
+              value: /etc/ssl/certs
             - name: ENV
               value: PROD
             - name: PORT
