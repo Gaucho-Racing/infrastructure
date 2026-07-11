@@ -40,6 +40,14 @@ spec:
               value: "9999"
             - name: DATABASE_NAME
               value: sentinel
+            # TEMPORARY: override DATABASE_HOST from the Vault-sourced
+            # secret because gr-postgres.database_host in Vault currently
+            # holds the wrong hostname (gr-hamilton.gauchoracing.com which
+            # doesn't resolve). k8s env: wins over envFrom:, so this
+            # value is what the container sees. Remove once the Vault
+            # value is corrected.
+            - name: DATABASE_HOST
+              value: gr-postgres.gauchoracing.com
 ---
 apiVersion: v1
 kind: Service
