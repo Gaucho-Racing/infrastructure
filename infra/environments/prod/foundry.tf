@@ -44,8 +44,8 @@
 #         record, writes CNAME → <tunnel-id>.cfargotunnel.com within
 #         its --interval (1m default).
 #      d. Traffic starts landing on foundry within CF TTL.
-#   5. Bake. Add each remaining hostname (sentinel-v5 / mapache / vault)
-#      in a follow-up PR — copy gr-prod/manifests/<svc>/ into
+#   5. Bake. Add each remaining hostname (mapache / vault) in a
+#      follow-up PR — copy gr-prod/manifests/<svc>/ into
 #      gr-foundry/manifests/<svc>/ with two file changes (ingress.yaml →
 #      Traefik + external-dns annotation, postgres.yaml → public
 #      hostname). No terraform edit needed.

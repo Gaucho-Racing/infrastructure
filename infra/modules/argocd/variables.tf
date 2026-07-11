@@ -19,7 +19,7 @@ variable "domain" {
 variable "oidc_issuer" {
   description = "OIDC issuer for SSO. Must byte-match Sentinel's ISSUER and the iss claim in its tokens."
   type        = string
-  default     = "https://sentinel-v5.gauchoracing.com"
+  default     = "https://sso.gauchoracing.com"
 }
 
 variable "oidc_client_id" {

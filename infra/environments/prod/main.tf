@@ -210,7 +210,8 @@ resource "cloudflare_dns_record" "gr_clickhouse" {
 # Cloudflare allows one entrypoint ruleset per (zone, phase). The
 # argocd rule was originally created via the dashboard, which Cloudflare
 # stores as an http_config_settings ruleset under the hood. We import
-# that existing ruleset and add the sentinel-v5 rule alongside it.
+# that existing ruleset and manage the remaining per-hostname rules
+# alongside it.
 resource "cloudflare_ruleset" "ssl_overrides" {
   zone_id = data.cloudflare_zone.gauchoracing.id
   name    = "Per-hostname SSL overrides"
@@ -221,15 +222,6 @@ resource "cloudflare_ruleset" "ssl_overrides" {
     {
       description = "argocd-strict-mode"
       expression  = "(http.host eq \"argocd.gauchoracing.com\")"
-      action      = "set_config"
-      enabled     = true
-      action_parameters = {
-        ssl = "strict"
-      }
-    },
-    {
-      description = "sentinel-v5-strict-mode"
-      expression  = "(http.host eq \"sentinel-v5.gauchoracing.com\")"
       action      = "set_config"
       enabled     = true
       action_parameters = {
