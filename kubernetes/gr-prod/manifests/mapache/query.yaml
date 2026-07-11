@@ -82,7 +82,7 @@ spec:
             # Sentinel v5: JWKS lives at /api/core/keys under SENTINEL_URL,
             # so the separate JWKS env var is gone (main.py derives it).
             - name: SENTINEL_URL
-              value: https://sentinel-v5.gauchoracing.com
+              value: https://sso.gauchoracing.com
             - name: SENTINEL_CLIENT_ID
               value: TIvD6jCH3mGV
 ---

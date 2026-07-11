@@ -16,7 +16,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-    - host: sentinel-v5.gauchoracing.com
+    - host: sso.gauchoracing.com
       http:
         paths:
           - path: /

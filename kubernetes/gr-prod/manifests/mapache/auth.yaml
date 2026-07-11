@@ -67,7 +67,7 @@ spec:
             # so the separate JWKS env var is gone. SA token replaces the
             # v4 static SENTINEL_TOKEN.
             - name: SENTINEL_URL
-              value: https://sentinel-v5.gauchoracing.com
+              value: https://sso.gauchoracing.com
             - name: SENTINEL_CLIENT_ID
               value: TIvD6jCH3mGV
             - name: SENTINEL_CLIENT_SECRET
