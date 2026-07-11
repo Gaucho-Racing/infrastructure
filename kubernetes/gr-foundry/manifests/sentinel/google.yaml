@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: google
+  namespace: sentinel
+spec:
+  # Single replica: the service runs a reconcile cron that mirrors group
+  # membership out to Google Groups. With >1 replica each pod runs its own
+  # cron, so two sweeps could write the same Google Group concurrently.
+  # Low-volume periodic work, so one replica is fine.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: google
+  template:
+    metadata:
+      labels:
+        app: google
+    spec:
+      containers:
+        - name: google
+          image: ghcr.io/gaucho-racing/sentinel-google:latest
+          ports:
+            - containerPort: 9995
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          envFrom:
+            - secretRef:
+                name: sentinel-secrets
+          env:
+            - name: ENV
+              value: PROD
+            - name: PORT
+              value: "9995"
+            - name: DATABASE_NAME
+              value: sentinel
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: google
+  namespace: sentinel
+spec:
+  selector:
+    app: google
+  ports:
+    - port: 9995
+      targetPort: 9995

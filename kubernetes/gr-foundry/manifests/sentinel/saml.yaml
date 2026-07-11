@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saml
+  namespace: sentinel
+spec:
+  # Single replica for now: on the very first boot the service generates
+  # and persists its SAML signing key + self-signed cert (saml_signing_key
+  # table). With >1 replica racing an empty table, two pods could each
+  # insert an active key and serve different certs, breaking SP signature
+  # verification. Once the row exists every replica loads the same key.
+  replicas: 1
+  selector:
+    matchLabels:
+      app: saml
+  template:
+    metadata:
+      labels:
+        app: saml
+    spec:
+      containers:
+        - name: saml
+          image: ghcr.io/gaucho-racing/sentinel-saml:latest
+          ports:
+            - containerPort: 9996
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          envFrom:
+            - secretRef:
+                name: sentinel-secrets
+          env:
+            - name: ENV
+              value: PROD
+            - name: PORT
+              value: "9996"
+            - name: DATABASE_NAME
+              value: sentinel
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: saml
+  namespace: sentinel
+spec:
+  selector:
+    app: saml
+  ports:
+    - port: 9996
+      targetPort: 9996

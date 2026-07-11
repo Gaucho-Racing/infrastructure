@@ -66,7 +66,7 @@ spec:
                   name: vault-secrets
                   key: POSTGRES_PASSWORD
             - name: SENTINEL_URL
-              value: https://sentinel-v5.gauchoracing.com
+              value: https://sso.gauchoracing.com
             - name: SENTINEL_CLIENT_ID
               value: Ehf9Nl8SVs9w
             - name: SENTINEL_CLIENT_SECRET
