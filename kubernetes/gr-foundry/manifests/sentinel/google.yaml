@@ -37,8 +37,8 @@ spec:
               value: PROD
             - name: PORT
               value: "9995"
-            - name: DATABASE_PORT
-              value: "5432"
+            - name: DATABASE_NAME
+              value: sentinel
 ---
 apiVersion: v1
 kind: Service
