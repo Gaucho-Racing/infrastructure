@@ -40,12 +40,9 @@ spec:
               value: "9996"
             - name: DATABASE_NAME
               value: sentinel
-            # TEMPORARY DATABASE_HOST + POSTGRES_PASSWORD override — see
-            # core.yaml for the rationale.
+            # See core.yaml for DATABASE_HOST rationale.
             - name: DATABASE_HOST
-              value: gr-postgres.gauchoracing.com
-            - name: POSTGRES_PASSWORD
-              value: JjxkVmmiVsy06DQWC0NRiw3hCf132wjG
+              value: postgres.sentinel.svc.cluster.local
 ---
 apiVersion: v1
 kind: Service

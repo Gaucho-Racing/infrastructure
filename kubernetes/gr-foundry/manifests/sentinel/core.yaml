@@ -40,17 +40,13 @@ spec:
               value: "9999"
             - name: DATABASE_NAME
               value: sentinel
-            # TEMPORARY: override DATABASE_HOST and POSTGRES_PASSWORD from
-            # the Vault-sourced secret while we debug why sentinel-secrets
-            # is being populated with wrong/stale values. k8s env: wins
-            # over envFrom:, so these values are what the container sees.
-            # Remove both overrides once VaultSecretSync is confirmed
-            # writing correct values, and rotate the postgres password
-            # since it's exposed in this commit.
+            # Route DATABASE_HOST through the in-cluster postgres
+            # ExternalName Service — matches how vault and mapache
+            # already do it. Wins over any DATABASE_HOST that envFrom
+            # picks up from sentinel-secrets, so a stale/bad value in
+            # Vault can't route pods to the wrong host.
             - name: DATABASE_HOST
-              value: gr-postgres.gauchoracing.com
-            - name: POSTGRES_PASSWORD
-              value: JjxkVmmiVsy06DQWC0NRiw3hCf132wjG
+              value: postgres.sentinel.svc.cluster.local
 ---
 apiVersion: v1
 kind: Service

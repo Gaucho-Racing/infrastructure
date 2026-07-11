@@ -16,6 +16,7 @@ resources:
   - namespace.yaml
   - vaultsecretsync.yaml
   - configmap-kerbecs.yaml
+  - postgres.yaml
   - kerbecs.yaml
   - core.yaml
   - oauth.yaml

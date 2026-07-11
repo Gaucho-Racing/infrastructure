@@ -1,0 +1,13 @@
+# In-cluster handle for gr-postgres. Same shape as the mapache + vault
+# equivalents. Pods dial `postgres.sentinel.svc.cluster.local`, CoreDNS
+# returns the ExternalName CNAME, which resolves via public DNS to the
+# gr-postgres EIP.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: sentinel
+spec:
+  type: ExternalName
+  externalName: gr-postgres.gauchoracing.com
