@@ -1,30 +1,3 @@
-# Sentinel on the foundry k3s cluster. Diverges from the gr-prod tree
-# in a few ways:
-#
-#   1. ingress.yaml uses Traefik + external-dns cloudflare-proxied
-#      annotation (matches the tunnel-based traffic path).
-#   2. postgres.yaml points at the public gr-postgres.gauchoracing.com
-#      hostname (foundry reaches gr-postgres over the internet, gated by
-#      scram-sha-256).
-#   3. All secrets AND most non-sensitive config env values come from
-#      the `sentinel-secrets` k8s Secret, which is populated by the
-#      VaultSecretSync in manifests-foundry/sentinel/vaultsecretsync.yaml.
-#      Only truly-structural env (ENV=PROD, PORT, DATABASE_PORT,
-#      KERBECS_CONFIG path) is baked into the Deployments.
-#
-# Pre-merge bootstrap:
-# Populate the `sentinel` app-secret in Vault (https://vault.gauchoracing.com)
-# with all 19 fields listed in vaultsecretsync.yaml's `secrets` map.
-# Values come from the gr-prod sentinel-secrets Secret + the plain env
-# values on the gr-prod Deployments — quick way to grab everything:
-#
-#   kubectl --context gr-prod -n sentinel get secret sentinel-secrets -o json \
-#     | jq -r '.data | to_entries[] | "\(.key | ascii_downcase) = \(.value|@base64d)"'
-#
-# Once populated, the k8s Secret materializes on first VaultSecretSync
-# reconcile and sentinel pods come up healthy. Future rotations happen
-# via the Vault UI + operator-triggered pod rollout — no kubectl.
-
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:

@@ -25,11 +25,6 @@ spec:
             limits:
               cpu: 500m
               memory: 512Mi
-          # Only truly-structural env stays plain here (deployment env,
-          # port that must match containerPort, universal Postgres port).
-          # Everything else — including plain URLs and DB names — comes
-          # from sentinel-secrets, which is materialized by the
-          # VaultSecretSync in this namespace. See vaultsecretsync.yaml.
           envFrom:
             - secretRef:
                 name: sentinel-secrets
@@ -40,11 +35,6 @@ spec:
               value: "9999"
             - name: DATABASE_NAME
               value: sentinel
-            # Route DATABASE_HOST through the in-cluster postgres
-            # ExternalName Service — matches how vault and mapache
-            # already do it. Wins over any DATABASE_HOST that envFrom
-            # picks up from sentinel-secrets, so a stale/bad value in
-            # Vault can't route pods to the wrong host.
             - name: DATABASE_HOST
               value: postgres.sentinel.svc.cluster.local
 ---

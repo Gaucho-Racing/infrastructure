@@ -1,11 +1,3 @@
-# Public entrypoint on the foundry k3s cluster. Traefik receives plain
-# HTTP forwarded by the in-cluster cloudflared tunnel; TLS terminates at
-# the Cloudflare edge. Host-based routing to the kerbecs gateway, which
-# then routes to core/oauth/discord/saml/google/web internally.
-#
-# DNS is managed by the foundry external-dns instance — cloudflare-proxied
-# flips the record orange, target comes from --default-targets (tunnel).
-
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

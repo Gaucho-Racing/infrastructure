@@ -1,14 +1,3 @@
-# Kustomize entrypoint — ArgoCD auto-detects this file and runs
-# `kustomize build` instead of treating the dir as a flat manifest set.
-# Files not listed under `resources` are ignored, so keep this list in
-# sync with what's actually in this directory.
-#
-# The `images` block below is the single source of truth for sentinel
-# service versions on the foundry cluster.
-#
-# rincon and kerbecs are on independent version streams from the
-# sentinel services — bump them separately when there's a reason to.
-
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
