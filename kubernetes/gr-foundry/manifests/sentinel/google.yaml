@@ -4,10 +4,6 @@ metadata:
   name: google
   namespace: sentinel
 spec:
-  # Single replica: the service runs a reconcile cron that mirrors group
-  # membership out to Google Groups. With >1 replica each pod runs its own
-  # cron, so two sweeps could write the same Google Group concurrently.
-  # Low-volume periodic work, so one replica is fine.
   replicas: 1
   selector:
     matchLabels:
@@ -39,7 +35,6 @@ spec:
               value: "9995"
             - name: DATABASE_NAME
               value: sentinel
-            # See core.yaml for DATABASE_HOST rationale.
             - name: DATABASE_HOST
               value: postgres.sentinel.svc.cluster.local
 ---

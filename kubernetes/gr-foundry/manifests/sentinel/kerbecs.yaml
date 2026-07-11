@@ -1,7 +1,3 @@
-# Gateway. Public traffic enters through Traefik (see ingress.yaml),
-# kerbecs routes to the right upstream Service based on its config in
-# the kerbecs-config ConfigMap.
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:

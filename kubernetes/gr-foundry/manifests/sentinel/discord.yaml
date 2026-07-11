@@ -4,8 +4,6 @@ metadata:
   name: discord
   namespace: sentinel
 spec:
-  # Stays at 1 — multiple replicas would each open their own gateway
-  # connection and double-process every Discord event.
   replicas: 1
   selector:
     matchLabels:
@@ -37,7 +35,6 @@ spec:
               value: "9998"
             - name: DATABASE_NAME
               value: sentinel
-            # See core.yaml for DATABASE_HOST rationale.
             - name: DATABASE_HOST
               value: postgres.sentinel.svc.cluster.local
 ---

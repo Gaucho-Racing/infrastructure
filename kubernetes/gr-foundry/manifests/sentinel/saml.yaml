@@ -4,11 +4,6 @@ metadata:
   name: saml
   namespace: sentinel
 spec:
-  # Single replica for now: on the very first boot the service generates
-  # and persists its SAML signing key + self-signed cert (saml_signing_key
-  # table). With >1 replica racing an empty table, two pods could each
-  # insert an active key and serve different certs, breaking SP signature
-  # verification. Once the row exists every replica loads the same key.
   replicas: 1
   selector:
     matchLabels:
@@ -40,7 +35,6 @@ spec:
               value: "9996"
             - name: DATABASE_NAME
               value: sentinel
-            # See core.yaml for DATABASE_HOST rationale.
             - name: DATABASE_HOST
               value: postgres.sentinel.svc.cluster.local
 ---
