@@ -37,10 +37,12 @@ spec:
               value: "9997"
             - name: DATABASE_NAME
               value: sentinel
-            # TEMPORARY DATABASE_HOST override — see core.yaml for the
-            # rationale. Remove once the Vault value is corrected.
+            # TEMPORARY DATABASE_HOST + POSTGRES_PASSWORD override — see
+            # core.yaml for the rationale.
             - name: DATABASE_HOST
               value: gr-postgres.gauchoracing.com
+            - name: POSTGRES_PASSWORD
+              value: JjxkVmmiVsy06DQWC0NRiw3hCf132wjG
 ---
 apiVersion: v1
 kind: Service
