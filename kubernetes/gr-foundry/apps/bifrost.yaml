@@ -1,0 +1,62 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bifrost
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://maximhq.github.io/bifrost/helm-charts
+    chart: bifrost
+    targetRevision: 2.1.26
+    helm:
+      releaseName: bifrost
+      values: |
+        replicaCount: 1
+
+        image:
+          tag: v1.5.12
+
+        ingress:
+          enabled: true
+          className: traefik
+          annotations:
+            external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+          hosts:
+            - host: bifrost.gauchoracing.com
+              paths:
+                - path: /
+                  pathType: Prefix
+
+        storage:
+          mode: sqlite
+          persistence:
+            enabled: true
+            accessMode: ReadWriteOnce
+            size: 10Gi
+
+        bifrost:
+          encryptionKeySecret:
+            name: bifrost-secrets
+            key: encryption-key
+          authConfig:
+            isEnabled: true
+            existingSecret: bifrost-secrets
+            usernameKey: username
+            passwordKey: password
+          client:
+            allowedOrigins:
+              - https://bifrost.gauchoracing.com
+            enforceAuthOnInference: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bifrost
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
