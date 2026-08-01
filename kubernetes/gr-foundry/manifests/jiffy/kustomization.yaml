@@ -10,4 +10,4 @@ resources:
 
 images:
   - name: ghcr.io/gaucho-racing/jiffy
-    newTag: "2.3.2"
+    newTag: 2.3.3
