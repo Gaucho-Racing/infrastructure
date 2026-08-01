@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: jiffy
+spec:
+  type: ExternalName
+  externalName: gr-postgres.gauchoracing.com
