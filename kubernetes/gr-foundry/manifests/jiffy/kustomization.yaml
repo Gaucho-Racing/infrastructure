@@ -1,0 +1,13 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - vaultsecretsync.yaml
+  - postgres.yaml
+  - api.yaml
+  - ingress.yaml
+
+images:
+  - name: ghcr.io/gaucho-racing/jiffy
+    newTag: "2.3.2"
