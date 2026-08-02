@@ -45,8 +45,6 @@ spec:
               value: PROD
             - name: PORT
               value: "8080"
-            - name: PREFIX
-              value: "!"
             - name: DATABASE_HOST
               value: postgres.jiffy.svc.cluster.local
             - name: DATABASE_PORT
@@ -60,13 +58,9 @@ spec:
             - name: SENTINEL_JWKS_URL
               value: https://sso.gauchoracing.com/.well-known/jwks.json
             - name: SENTINEL_CLIENT_ID
-              value: MxgxnQFxKTNH
+              value: N5xdntUMdRfD
             - name: SENTINEL_REDIRECT_URI
               value: https://jiffy.gauchoracing.com/auth/login
-            - name: DISCORD_GUILD
-              value: "756738476887638107"
-            - name: DISCORD_LOG_CHANNEL
-              value: "1215431405211885669"
             - name: S3_REGION
               value: us-west-2
             - name: S3_BUCKET
