@@ -20,36 +20,6 @@ module "vpc" {
   cluster_name = local.cluster_name
 }
 
-module "eks" {
-  source = "../../modules/eks"
-
-  name               = local.cluster_name
-  kubernetes_version = "1.35"
-
-  vpc_id     = module.vpc.vpc_id
-  subnet_ids = module.vpc.private_subnet_ids
-
-  # Both the local IAM user (admin-cli) and the CI OIDC role need cluster
-  # admin. Listed explicitly so the set is stable regardless of who runs
-  # terraform — the module's auto-cluster-creator flag is disabled to
-  # avoid the entry flipping between appliers.
-  cluster_admin_principals = [
-    "arn:aws:iam::211125506628:user/admin-cli",
-    "arn:aws:iam::211125506628:role/github-actions-terraform",
-  ]
-}
-
-module "argocd" {
-  source = "../../modules/argocd"
-
-  domain = "argocd.gauchoracing.com"
-
-  # Sentinel-generated client_id for the registered ArgoCD application.
-  oidc_client_id = "b9OrCRXdo1VQ"
-
-  depends_on = [module.eks]
-}
-
 # Wildcard cert for *.gauchoracing.com — every service (argocd, sentinel,
 # whatever else lands later) terminates TLS on its ALB using this cert.
 # Public-facing TLS terminates at the Cloudflare edge using Cloudflare's
@@ -97,10 +67,6 @@ module "postgres" {
   # a known set of admin IPs makes sense.
   associate_public_ip = true
   admin_cidr_blocks   = ["0.0.0.0/0"]
-
-  allowed_security_group_ids = [
-    module.eks.node_security_group_id,
-  ]
 }
 
 # Cloudflare DNS record for the Postgres EIP. Gray-cloud (proxied = false)
@@ -144,10 +110,6 @@ module "mqtt" {
 
   associate_public_ip = true
   admin_cidr_blocks   = ["0.0.0.0/0"]
-
-  allowed_security_group_ids = [
-    module.eks.node_security_group_id,
-  ]
 }
 
 resource "cloudflare_dns_record" "gr_mqtt" {
@@ -185,10 +147,6 @@ module "clickhouse" {
 
   associate_public_ip = true
   admin_cidr_blocks   = ["0.0.0.0/0"]
-
-  allowed_security_group_ids = [
-    module.eks.node_security_group_id,
-  ]
 }
 
 resource "cloudflare_dns_record" "gr_clickhouse" {
