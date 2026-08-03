@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: atlantis
+  namespace: atlantis
+spec:
+  serviceName: atlantis
+  replicas: 1
+  selector:
+    matchLabels:
+      app: atlantis
+  template:
+    metadata:
+      labels:
+        app: atlantis
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: atlantis
+          image: ghcr.io/runatlantis/atlantis:latest
+          ports:
+            - name: atlantis
+              containerPort: 4141
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 4141
+            periodSeconds: 60
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 4141
+            periodSeconds: 60
+          envFrom:
+            - secretRef:
+                name: atlantis-secrets
+          env:
+            - name: ATLANTIS_DATA_DIR
+              value: /atlantis
+            # Kubernetes injects its own ATLANTIS_PORT from the Service; override it.
+            - name: ATLANTIS_PORT
+              value: "4141"
+            - name: ATLANTIS_ATLANTIS_URL
+              value: https://atlantis.gauchoracing.com
+            - name: ATLANTIS_REPO_ALLOWLIST
+              value: github.com/Gaucho-Racing/infrastructure
+            - name: ATLANTIS_GH_APP_SLUG
+              value: gaucho-racing-atlantis
+            - name: ATLANTIS_WRITE_GIT_CREDS
+              value: "true"
+            - name: ATLANTIS_WEB_BASIC_AUTH
+              value: "true"
+            - name: ATLANTIS_WEB_USERNAME
+              value: gaucho
+            - name: ATLANTIS_REPO_CONFIG_JSON
+              value: '{"repos":[{"id":"github.com/Gaucho-Racing/infrastructure","apply_requirements":["approved","mergeable"],"plan_requirements":[],"import_requirements":["approved"]}]}'
+          volumeMounts:
+            - name: atlantis-data
+              mountPath: /atlantis
+  volumeClaimTemplates:
+    - metadata:
+        name: atlantis-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 5Gi
