@@ -57,3 +57,5 @@ in the Vault UI.
 
 S3 (`gaucho-racing-tfstate`, management account) with native locking
 (`use_lockfile = true`, Terraform ≥ 1.10). One key per environment root.
+Only management-account credentials (Atlantis) can reach the backend —
+member credentials live in the dev account and cannot init it locally.

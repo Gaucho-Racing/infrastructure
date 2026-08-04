@@ -31,6 +31,11 @@ Environment roots and where their resources live:
   (legacy: EC2 data services, Cloudflare DNS/tunnel, org-level IAM).
 - State: `gaucho-racing-tfstate` bucket (management account), one key per
   root, S3 native locking. The `.terraform.lock.hcl` per root is committed.
+- State is reachable only from management-account credentials, which team
+  members do not get — member credentials live in the dev account, and no
+  cross-account bucket policy exists. This is what enforces Atlantis-only:
+  local terraform cannot init the backend. Never distribute secrets by
+  telling members to read terraform outputs/state; hand them off via Vault.
 
 Shared modules live in `infra/modules/`; environments compose them.
 
