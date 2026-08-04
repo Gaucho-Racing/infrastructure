@@ -27,8 +27,13 @@ Environment roots and where their resources live:
 
 - `infra/environments/dev` → Development account 104050870528, via
   `assume_role` on `OrganizationAccountAccessRole`. Sandbox + dev services.
-- `infra/environments/prod` → management account 211125506628 directly
-  (legacy: EC2 data services, Cloudflare DNS/tunnel, org-level IAM).
+- `infra/environments/prod` → Production account 174765207334, same
+  assume-role pattern.
+- The management account (211125506628) holds legacy infra that is NOT
+  terraform-managed (deprecated; administered manually while it drains).
+  Never add terraform targeting the management account. Its old state is
+  archived at `s3://gaucho-racing-tfstate/archive/legacy-mgmt-prod.tfstate`
+  — the generated DB passwords live only there and in Vault.
 - State: `gaucho-racing-tfstate` bucket (management account), one key per
   root, S3 native locking. The `.terraform.lock.hcl` per root is committed.
 - State is reachable only from management-account credentials, which team

@@ -7,7 +7,7 @@ Gaucho Racing's AWS infrastructure and Kubernetes deployment configuration.
 ```
 infra/         Terraform — AWS accounts, S3, EC2 data services, Cloudflare
   environments/dev    → Gaucho Racing Development account (104050870528)
-  environments/prod   → management account (211125506628, legacy infra)
+  environments/prod   → Gaucho Racing Production account (174765207334)
   modules/            shared module definitions
 kubernetes/    GitOps — ArgoCD apps + kustomize manifests
   gr-foundry/         on-prem k3s cluster (sentinel, vault, jiffy, atlantis, …)
@@ -20,9 +20,15 @@ requests; Kubernetes manifests are reconciled continuously by ArgoCD.
 
 | Account | ID | Purpose |
 |---|---|---|
-| gauchoracing | 211125506628 | Org management + legacy prod infra (`environments/prod`) |
+| gauchoracing | 211125506628 | Org management + legacy infra (not terraform-managed) |
 | Gaucho Racing Development | 104050870528 | Member sandbox + dev services (`environments/dev`) |
-| Gaucho Racing Production | 174765207334 | Future prod home (empty) |
+| Gaucho Racing Production | 174765207334 | Production services (`environments/prod`) |
+
+The legacy infra in the management account (EC2 data services, Cloudflare
+DNS/tunnel) is deprecated: it's administered manually until each piece is
+removed or migrated into the production account's terraform. Its final
+terraform state is archived at
+`s3://gaucho-racing-tfstate/archive/legacy-mgmt-prod.tfstate`.
 
 ## Terraform workflow — Atlantis only
 

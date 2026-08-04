@@ -11,7 +11,7 @@ projects:
         - "../../modules/**/*.tf"
 
   # Prod plans are approval-gated (unlike dev): a plan executes provider
-  # code with management-account credentials, so nothing runs until a
+  # code with production-account credentials, so nothing runs until a
   # human has reviewed the diff.
   - name: prod
     dir: infra/environments/prod

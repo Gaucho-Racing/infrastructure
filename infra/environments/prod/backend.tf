@@ -1,5 +1,11 @@
-# Terraform 1.10+ native S3 state locking. Each env writes its state to a
-# distinct key under the shared bucket so they don't collide.
+# Prod environment root — resources land in the Gaucho Racing Production
+# member account (174765207334) via assume-role; state stays in the shared
+# tfstate bucket in the management account under its own key.
+#
+# Legacy management-account infra (EC2 data services, Cloudflare) is no
+# longer terraform-managed — its final state is archived at
+# s3://gaucho-racing-tfstate/archive/legacy-mgmt-prod.tfstate (holds the
+# generated DB passwords) and the config lives in git history.
 terraform {
   required_version = ">= 1.10"
 
@@ -16,28 +22,15 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 6.0"
     }
-    cloudflare = {
-      source  = "cloudflare/cloudflare"
-      version = "~> 5.0"
-    }
-    tls = {
-      source  = "hashicorp/tls"
-      version = "~> 4.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.6"
-    }
   }
 }
 
-# Cloudflare provider picks up credentials from the CLOUDFLARE_API_TOKEN
-# environment variable. Token needs Zone:Read, DNS:Edit, and
-# SSL and Certificates:Edit on the gauchoracing.com zone.
-provider "cloudflare" {}
-
 provider "aws" {
   region = "us-west-2"
+
+  assume_role {
+    role_arn = "arn:aws:iam::174765207334:role/OrganizationAccountAccessRole"
+  }
 
   default_tags {
     tags = {
