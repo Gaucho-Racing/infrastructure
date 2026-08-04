@@ -12,10 +12,9 @@
 # its own external-dns Application with a different txtOwnerId and its
 # own tunnel target; the two never touch each other's records.
 #
-# Manual one-time bootstrap after this Application first syncs:
-#
-#   kubectl -n external-dns create secret generic cloudflare-api-token \
-#     --from-literal=api-token="$CLOUDFLARE_API_TOKEN"
+# The cloudflare-api-token Secret is synced from Vault (cloudflare-prod)
+# by the external-dns-secrets Application. Manual one-time bootstrap
+# after this Application first syncs:
 #
 #   kubectl -n external-dns create configmap foundry-tunnel-target \
 #     --from-literal=target="$(terraform -chdir=infra/environments/prod && terraform output -raw foundry_tunnel_id).cfargotunnel.com"
