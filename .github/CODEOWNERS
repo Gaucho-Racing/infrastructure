@@ -2,4 +2,4 @@
 # this with a branch protection rule requiring Code Owner review if you
 # want it enforced rather than just suggestive.
 
-/infra/ @bk1031
+/infra/ @bk1031 @gauchoracing
