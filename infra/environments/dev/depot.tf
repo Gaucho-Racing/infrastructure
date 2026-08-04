@@ -1,7 +1,7 @@
 # Depot's dev bucket + scoped IAM user. Depot does Put/Get/Head/Delete and
-# presigned URLs only — no ListBucket. Access key is created manually
-# (`aws iam create-access-key --user-name depot-dev`) so the secret never
-# lands in terraform state; it goes in each developer's .env.
+# presigned URLs only — no ListBucket. The access key secret is in TF state;
+# read it with `terraform output -raw depot_dev_secret_access_key` → each
+# developer's .env.
 resource "aws_s3_bucket" "depot_dev" {
   bucket = "gr-depot-dev"
 }
@@ -30,6 +30,10 @@ resource "aws_s3_bucket_cors_configuration" "depot_dev" {
 
 resource "aws_iam_user" "depot_dev" {
   name = "depot-dev"
+}
+
+resource "aws_iam_access_key" "depot_dev" {
+  user = aws_iam_user.depot_dev.name
 }
 
 resource "aws_iam_user_policy" "depot_dev_s3" {
