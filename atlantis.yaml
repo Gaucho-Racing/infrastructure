@@ -9,3 +9,17 @@ projects:
         - "**/*.tf"
         - ".terraform.lock.hcl"
         - "../../modules/**/*.tf"
+
+  # Prod plans are approval-gated (unlike dev): a plan executes provider
+  # code with production-account credentials, so nothing runs until a
+  # human has reviewed the diff.
+  - name: prod
+    dir: infra/environments/prod
+    terraform_version: v1.15.5
+    plan_requirements: [approved]
+    apply_requirements: [approved, mergeable]
+    autoplan:
+      when_modified:
+        - "**/*.tf"
+        - ".terraform.lock.hcl"
+        - "../../modules/**/*.tf"
