@@ -35,10 +35,20 @@ Atlantis's locks and bypass review.
    comments the diff (prod plans additionally wait for PR approval).
 2. Get the PR approved.
 3. Comment `atlantis apply` — Atlantis applies pre-merge and reports back.
-4. Merge.
+4. Squash and merge.
 
 If a PR is abandoned with an unapplied plan, comment `atlantis unlock` on it
 to release the project lock.
+
+## Branch rules
+
+`main` is fully protected — **no one can bypass, including admins**:
+
+- Squash-and-merge is the only merge method; linear history is required.
+- Every PR needs an approving review. PRs touching `infra/` additionally
+  need a Code Owner approval (see `.github/CODEOWNERS`).
+- Atlantis refuses to apply until the PR is approved and mergeable, so the
+  review gate covers infrastructure changes, not just merges.
 
 ## Kubernetes workflow
 

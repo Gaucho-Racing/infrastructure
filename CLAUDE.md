@@ -66,7 +66,12 @@ the PR description.
 
 ## Conventions
 
+- `main` is fully protected with no bypass (not even admins): every PR
+  needs an approving review, `infra/` changes need a Code Owner approval
+  (`.github/CODEOWNERS`), squash-and-merge is the only merge method, and
+  history is linear. Never attempt to push to `main` directly.
 - Conventional commits with scope (`feat(dev): …`, `fix(foundry): …`).
+  Commit messages become squash-commit titles, so make them PR-worthy.
 - Branches: `<github-username>/<feature-name>`.
 - PR bodies: short bullet list of changes; call out any required manual
   steps (Vault secrets, access rules).
