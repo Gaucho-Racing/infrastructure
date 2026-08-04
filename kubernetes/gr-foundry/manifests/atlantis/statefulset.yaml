@@ -61,7 +61,7 @@ spec:
             - name: ATLANTIS_WEB_USERNAME
               value: gaucho
             - name: ATLANTIS_REPO_CONFIG_JSON
-              value: '{"repos":[{"id":"github.com/Gaucho-Racing/infrastructure","apply_requirements":["approved","mergeable"],"plan_requirements":[],"import_requirements":["approved"]}]}'
+              value: '{"repos":[{"id":"github.com/Gaucho-Racing/infrastructure","apply_requirements":["approved","mergeable"],"plan_requirements":[],"import_requirements":["approved"],"allowed_overrides":["plan_requirements","apply_requirements","import_requirements"]}]}'
           volumeMounts:
             - name: atlantis-data
               mountPath: /atlantis
