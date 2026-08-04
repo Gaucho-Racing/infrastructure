@@ -1,0 +1,55 @@
+# Depot's dev bucket + scoped IAM user. Depot does Put/Get/Head/Delete and
+# presigned URLs only — no ListBucket. Access key is created manually
+# (`aws iam create-access-key --user-name depot-dev`) so the secret never
+# lands in terraform state; it goes in each developer's .env.
+resource "aws_s3_bucket" "depot_dev" {
+  bucket = "gr-depot-dev"
+}
+
+resource "aws_s3_bucket_public_access_block" "depot_dev" {
+  bucket = aws_s3_bucket.depot_dev.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+# The web UI's presigned upload flow PUTs directly from the browser to S3,
+# which is cross-origin from the local kerbecs gateway.
+resource "aws_s3_bucket_cors_configuration" "depot_dev" {
+  bucket = aws_s3_bucket.depot_dev.id
+
+  cors_rule {
+    allowed_origins = ["http://localhost:10310"]
+    allowed_methods = ["GET", "PUT", "HEAD"]
+    allowed_headers = ["*"]
+    max_age_seconds = 3000
+  }
+}
+
+resource "aws_iam_user" "depot_dev" {
+  name = "depot-dev"
+}
+
+resource "aws_iam_user_policy" "depot_dev_s3" {
+  name = "depot-dev-s3"
+  user = aws_iam_user.depot_dev.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:DeleteObject",
+          "s3:AbortMultipartUpload",
+          "s3:ListMultipartUploadParts",
+        ]
+        Resource = "${aws_s3_bucket.depot_dev.arn}/*"
+      }
+    ]
+  })
+}
