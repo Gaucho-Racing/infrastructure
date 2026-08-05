@@ -1,0 +1,14 @@
+# In-cluster handle for the gr-postgres EC2, reached over its public
+# hostname from off-AWS — same approach as ../sentinel/postgres.yaml.
+#
+# The mapache database lives on this server alongside sentinel; the two
+# are isolated by DB, not by instance.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: mapache
+spec:
+  type: ExternalName
+  externalName: gr-postgres.gauchoracing.com
