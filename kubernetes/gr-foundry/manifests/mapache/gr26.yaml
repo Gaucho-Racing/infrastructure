@@ -7,7 +7,8 @@
 # MQTT, ClickHouse and the shelter bucket all still live in AWS — these
 # pods reach them outbound over their public hostnames, which is the
 # whole telemetry path crossing the internet from on-prem now.
-# Auth uses the shared mapache-fleet credential (MQTT_USER=mapache).
+# MQTT auth is the shared fleet credential, user and password both from
+# Vault so rotating it is a one-place change.
 
 apiVersion: apps/v1
 kind: Deployment
@@ -82,7 +83,10 @@ spec:
             - name: MQTT_PORT
               value: "1883"
             - name: MQTT_USER
-              value: mapache
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: MQTT_USER
             - name: MQTT_PASSWORD
               valueFrom:
                 secretKeyRef:

@@ -58,7 +58,10 @@ spec:
             - name: MQTT_PORT
               value: "1883"
             - name: MQTT_USER
-              value: mapache
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: MQTT_USER
             - name: MQTT_PASSWORD
               valueFrom:
                 secretKeyRef:
