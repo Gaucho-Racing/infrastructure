@@ -1,0 +1,80 @@
+# live: WebSocket / SSE signal-streaming service.
+#
+# Subscribes to the `query/live/#` republish topic (non-shared) so every
+# replica sees every signal — this is what unblocks the dashboard from
+# the gr26 shared-sub partial-visibility issue. The in-process Hub +
+# WebSocket endpoint that used to live on gr26 was extracted into this
+# service in v3.5.0 (Mapache commit 22102fa).
+#
+# Cache window (CACHE_WINDOW_SEC=60) is the ring buffer length each
+# replica keeps for newly-connecting clients. State is per-pod; a pod
+# restart drops its cache, and clients that reconnect onto another pod
+# see only that pod's cache for the first 60s.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: live
+  namespace: mapache
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: live
+  template:
+    metadata:
+      labels:
+        app: live
+    spec:
+      # Spread across at least 2 nodes (minDomains) but tolerate skew
+      # up to 1 (so 3 replicas → [2,1], not forced [1,1,1]).
+      topologySpreadConstraints:
+        - maxSkew: 1
+          minDomains: 2
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: live
+      containers:
+        - name: live
+          image: ghcr.io/gaucho-racing/mapache/live:latest
+          ports:
+            - containerPort: 7015
+          resources:
+            requests:
+              cpu: 50m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            - name: ENV
+              value: PROD
+            - name: PORT
+              value: "7015"
+            - name: MQTT_HOST
+              value: gr-mqtt.gauchoracing.com
+            - name: MQTT_PORT
+              value: "1883"
+            - name: MQTT_USER
+              value: mapache
+            - name: MQTT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: MQTT_PASSWORD
+            - name: CACHE_WINDOW_SEC
+              value: "60"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: live
+  namespace: mapache
+spec:
+  selector:
+    app: live
+  ports:
+    - port: 7015
+      targetPort: 7015

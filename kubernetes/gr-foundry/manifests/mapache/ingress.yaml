@@ -1,0 +1,24 @@
+# Public entrypoint. Traffic arrives through the Cloudflare tunnel and
+# terminates at the kerbecs gateway port (10310), which routes to the
+# backend services + dashboard internally.
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mapache
+  namespace: mapache
+  annotations:
+    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: mapache.gauchoracing.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kerbecs
+                port:
+                  number: 10310
