@@ -45,7 +45,10 @@ spec:
             - name: DATABASE_PORT
               value: "5432"
             - name: DATABASE_USER
-              value: postgres
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: DATABASE_USER
             - name: DATABASE_NAME
               value: mapache
             - name: DATABASE_PASSWORD

@@ -57,11 +57,17 @@ spec:
             # The gr26 process auto-creates the mapache database on first
             # connect via the always-present `default` DB.
             - name: CLICKHOUSE_HOST
-              value: gr-clickhouse.gauchoracing.com
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: CLICKHOUSE_HOST
             - name: CLICKHOUSE_PORT
               value: "9000"
             - name: CLICKHOUSE_USER
-              value: admin
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: CLICKHOUSE_USER
             - name: CLICKHOUSE_DATABASE
               value: mapache
             - name: CLICKHOUSE_PASSWORD

@@ -45,7 +45,10 @@ spec:
             - name: DATABASE_PORT
               value: "5432"
             - name: DATABASE_USER
-              value: postgres
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: DATABASE_USER
             - name: DATABASE_NAME
               value: mapache
             - name: DATABASE_PASSWORD
@@ -58,11 +61,17 @@ spec:
             # the HTTP port 8123 — distinct from gr26's native 9000. Password
             # is shared with gr26 via mapache-secrets/CLICKHOUSE_PASSWORD.
             - name: CLICKHOUSE_HOST
-              value: gr-clickhouse.gauchoracing.com
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: CLICKHOUSE_HOST
             - name: CLICKHOUSE_PORT
               value: "8123"
             - name: CLICKHOUSE_USER
-              value: admin
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: CLICKHOUSE_USER
             - name: CLICKHOUSE_DATABASE
               value: mapache
             - name: CLICKHOUSE_PASSWORD
