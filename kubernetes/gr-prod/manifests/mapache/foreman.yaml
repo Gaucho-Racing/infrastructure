@@ -25,10 +25,12 @@ spec:
               app: foreman
       containers:
         - name: foreman
-          # Standalone Foreman lives in github.com/gaucho-racing/Foreman now.
-          # The kustomization.yaml `images:` block pins the tag — :latest
-          # here is just the placeholder kustomize matches against.
+          # Standalone Foreman lives in github.com/gaucho-racing/Foreman now
+          # and tracks :latest instead of a pinned tag. Always makes a
+          # recreated pod re-pull rather than reuse a cached layer; ArgoCD
+          # still won't roll pods when only the upstream image changed.
           image: ghcr.io/gaucho-racing/foreman:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 7011
           resources:

@@ -44,11 +44,8 @@ images:
     newTag: 3.9.9
   - name: ghcr.io/gaucho-racing/mapache/query
     newTag: 3.9.9
-  # Foreman is its own project now (github.com/gaucho-racing/Foreman)
-  # with its own release cadence. Track via its semver tags, not
-  # mapache's. Mapache services keep tracking together via newTag above.
   - name: ghcr.io/gaucho-racing/foreman
-    newTag: 2.0.2
+    newTag: latest
   - name: ghcr.io/gaucho-racing/mapache/dashboard
     newTag: 3.9.9
   - name: bk1031/kerbecs
