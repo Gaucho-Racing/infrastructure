@@ -35,22 +35,18 @@ resources:
 
 images:
   - name: ghcr.io/gaucho-racing/mapache/auth
-    newTag: 3.9.8
+    newTag: 3.9.9
   - name: ghcr.io/gaucho-racing/mapache/vehicle
-    newTag: 3.9.8
+    newTag: 3.9.9
   - name: ghcr.io/gaucho-racing/mapache/gr26
-    newTag: 3.9.8
+    newTag: 3.9.9
   - name: ghcr.io/gaucho-racing/mapache/live
-    newTag: 3.9.8
+    newTag: 3.9.9
   - name: ghcr.io/gaucho-racing/mapache/query
-    newTag: 3.9.8
-  # Foreman is its own project now (github.com/gaucho-racing/Foreman) with
-  # its own release cadence, so it doesn't ride mapache's newTag above.
-  # Deliberately unpinned — see imagePullPolicy in foreman.yaml. Pin a
-  # semver tag here instead if you need a reproducible rollback.
+    newTag: 3.9.9
   - name: ghcr.io/gaucho-racing/foreman
     newTag: latest
   - name: ghcr.io/gaucho-racing/mapache/dashboard
-    newTag: 3.9.8
+    newTag: 3.9.9
   - name: bk1031/kerbecs
     newTag: 3.2.0
