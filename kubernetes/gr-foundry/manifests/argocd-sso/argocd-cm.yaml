@@ -1,0 +1,40 @@
+# Sentinel OIDC for the foundry ArgoCD UI. Mirrors the gr-prod recipe in
+# infra/modules/argocd/main.tf, but the foundry install is a raw upstream
+# manifest (not Helm), so SSO lands here as a partial argocd-cm applied
+# with ServerSideApply — only the keys below are owned by this app; the
+# upstream install's existing keys are untouched.
+#
+# Prune=false,Delete=false: this ConfigMap is shared with the upstream
+# install. Removing the argocd-sso Application must never delete it.
+#
+# clientID/clientSecret resolve via ArgoCD's $<secret>:<key> references —
+# see vaultsecretsync.yaml for how argocd-sentinel-oidc gets populated and
+# the label it must carry.
+#
+# requestedScopes uses Sentinel's scope names: groups:read (NOT "groups")
+# gates the groups claim, and offline_access requests a refresh token so
+# sessions persist past the ~30m access-token TTL.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+data:
+  url: https://argocd.gauchoracing.com
+  oidc.config: |
+    name: Sentinel
+    issuer: https://sso.gauchoracing.com
+    clientID: $argocd-sentinel-oidc:oidc.clientID
+    clientSecret: $argocd-sentinel-oidc:oidc.clientSecret
+    requestedScopes:
+      - openid
+      - profile
+      - email
+      - groups:read
+      - offline_access
+    requestedIDTokenClaims:
+      groups:
+        essential: true
