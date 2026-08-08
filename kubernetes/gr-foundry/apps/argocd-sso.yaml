@@ -1,0 +1,30 @@
+# Sentinel SSO for the foundry ArgoCD at argocd.gauchoracing.com.
+#
+# The ArgoCD install itself is managed outside GitOps (kubectl-applied
+# upstream manifest); this Application owns only the SSO/RBAC keys in
+# argocd-cm / argocd-rbac-cm (merged via ServerSideApply) plus the
+# VaultSecretSync for the OIDC client credentials. Manual bootstrap steps
+# are listed in manifests/argocd-sso/vaultsecretsync.yaml.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-sso
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Gaucho-Racing/infrastructure.git
+    targetRevision: main
+    path: kubernetes/gr-foundry/manifests/argocd-sso
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
