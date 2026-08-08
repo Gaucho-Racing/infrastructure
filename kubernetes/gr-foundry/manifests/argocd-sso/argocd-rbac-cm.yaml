@@ -1,0 +1,20 @@
+# RBAC for Sentinel logins, keyed on the dedicated ArgoCD groups in
+# Sentinel (both must be linked to the ArgoCD application there so they
+# appear in the groups claim). No policy.default: logging in grants
+# nothing — access comes only via group membership. The local admin user
+# is unaffected — it bypasses RBAC entirely.
+#
+# Shared with the upstream install, same as argocd-cm: partial SSA-managed
+# keys, never pruned/deleted by this app.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-rbac-cm
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+data:
+  policy.csv: |
+    g, ArgoAdmins, role:admin
+    g, ArgoViewers, role:readonly
