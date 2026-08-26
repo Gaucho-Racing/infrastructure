@@ -122,6 +122,26 @@ data:
           strip_prefix: /api
         envelope: passthrough
 
+      # Service-account management (reveal / rotate / delete a bearer token).
+      # Without this route the paths fall through to web-frontend below and
+      # nginx answers 200 + index.html, so the SPA silently renders an empty
+      # token instead of erroring.
+      - name: core-service-accounts
+        match:
+          path: /api/service-accounts/*
+        upstream: core
+        rewrite:
+          strip_prefix: /api
+        envelope: passthrough
+
+      - name: core-analytics
+        match:
+          path: /api/analytics/*
+        upstream: core
+        rewrite:
+          strip_prefix: /api
+        envelope: passthrough
+
       - name: oauth
         match:
           path: /api/oauth/*
