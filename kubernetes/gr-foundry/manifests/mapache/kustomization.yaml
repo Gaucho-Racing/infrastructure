@@ -36,22 +36,22 @@ resources:
 
 images:
   - name: ghcr.io/gaucho-racing/mapache/auth
-    newTag: 3.9.9
+    newTag: 3.10.2
   - name: ghcr.io/gaucho-racing/mapache/vehicle
-    newTag: 3.9.9
+    newTag: 3.10.2
   - name: ghcr.io/gaucho-racing/mapache/gr26
-    newTag: 3.9.9
+    newTag: 3.10.2
   # p987 merged after v3.9.9 so it has no release tag yet; tracks :latest
   # until the next services release bumps it like the rest.
   - name: ghcr.io/gaucho-racing/mapache/p987
-    newTag: latest
+    newTag: 3.10.2
   - name: ghcr.io/gaucho-racing/mapache/live
-    newTag: 3.9.9
+    newTag: 3.10.2
   - name: ghcr.io/gaucho-racing/mapache/query
-    newTag: 3.9.9
+    newTag: 3.10.2
   - name: ghcr.io/gaucho-racing/foreman
     newTag: latest
   - name: ghcr.io/gaucho-racing/mapache/dashboard
-    newTag: 3.9.9
+    newTag: 3.10.2
   - name: bk1031/kerbecs
     newTag: 3.2.0
