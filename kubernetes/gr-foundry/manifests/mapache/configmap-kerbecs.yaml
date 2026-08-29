@@ -69,6 +69,12 @@ data:
         instances:
           - http://gr26.mapache.svc.cluster.local:7005
 
+      p987:
+        name: mapache-p987
+        version: 0.1.0
+        instances:
+          - http://p987.mapache.svc.cluster.local:7020
+
       live:
         name: mapache-live
         version: 0.1.0
@@ -162,6 +168,14 @@ data:
         match:
           path: /api/gr26/*
         upstream: gr26
+        rewrite:
+          strip_prefix: /api
+        envelope: default
+
+      - name: p987
+        match:
+          path: /api/p987/*
+        upstream: p987
         rewrite:
           strip_prefix: /api
         envelope: default
