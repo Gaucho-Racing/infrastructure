@@ -27,6 +27,7 @@ resources:
   - auth.yaml
   - vehicle.yaml
   - gr26.yaml
+  - p987.yaml
   - live.yaml
   - query.yaml
   - foreman.yaml
@@ -40,6 +41,10 @@ images:
     newTag: 3.9.9
   - name: ghcr.io/gaucho-racing/mapache/gr26
     newTag: 3.9.9
+  # p987 merged after v3.9.9 so it has no release tag yet; tracks :latest
+  # until the next services release bumps it like the rest.
+  - name: ghcr.io/gaucho-racing/mapache/p987
+    newTag: latest
   - name: ghcr.io/gaucho-racing/mapache/live
     newTag: 3.9.9
   - name: ghcr.io/gaucho-racing/mapache/query

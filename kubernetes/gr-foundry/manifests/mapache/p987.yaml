@@ -1,0 +1,111 @@
+# p987: telemetry ingest for the Porsche 987 (TCM-987).
+#
+# Same shape as gr26 but a narrower job: live path only. No foreman
+# worker pool and no shelter cold-storage ingest, so no FOREMAN_ENDPOINT
+# and no AWS credentials — it subscribes, decodes against the 987 signal
+# definitions, writes ClickHouse, and republishes to query/live/*.
+#
+# MQTT uses a shared subscription ($share/p987-cluster/p987/#) so frames
+# are split across replicas rather than each replica writing the same row.
+#
+# Pinned to :latest with Always because p987 has no release tag yet — it
+# merged after v3.9.9. The next services release bumps this to a real
+# version via the deploy workflow, at which point the pull policy can go.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: p987
+  namespace: mapache
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: p987
+  template:
+    metadata:
+      labels:
+        app: p987
+    spec:
+      topologySpreadConstraints:
+        - maxSkew: 1
+          minDomains: 2
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app: p987
+      containers:
+        - name: p987
+          image: ghcr.io/gaucho-racing/mapache/p987:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 7020
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          env:
+            - name: ENV
+              value: PROD
+            - name: PORT
+              value: "7020"
+            # Shares the mapache database with gr26; the p987_can table is
+            # created on first connect.
+            - name: CLICKHOUSE_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: CLICKHOUSE_HOST
+            - name: CLICKHOUSE_PORT
+              value: "9000"
+            - name: CLICKHOUSE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: CLICKHOUSE_USER
+            - name: CLICKHOUSE_DATABASE
+              value: mapache
+            - name: CLICKHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: CLICKHOUSE_PASSWORD
+            - name: KERBECS_ENDPOINT
+              value: http://kerbecs.mapache.svc.cluster.local:10300
+            - name: KERBECS_USER
+              value: admin
+            - name: KERBECS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: KERBECS_PASSWORD
+            - name: MQTT_HOST
+              value: gr-mqtt.gauchoracing.com
+            - name: MQTT_PORT
+              value: "1883"
+            - name: MQTT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: MQTT_USER
+            - name: MQTT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mapache-secrets
+                  key: MQTT_PASSWORD
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: p987
+  namespace: mapache
+spec:
+  selector:
+    app: p987
+  ports:
+    - port: 7020
+      targetPort: 7020
