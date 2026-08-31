@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - vaultsecretsync.yaml
+  - service.yaml
+  - statefulset.yaml
+  - networkpolicy.yaml
+  - poddisruptionbudget.yaml
+
+images:
+  - name: postgres
+    newTag: 18.4-bookworm
