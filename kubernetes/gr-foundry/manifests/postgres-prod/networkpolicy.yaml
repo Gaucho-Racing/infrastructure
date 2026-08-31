@@ -10,17 +10,6 @@ spec:
   policyTypes:
     - Ingress
   ingress:
-    - from:
-        - namespaceSelector:
-            matchExpressions:
-              - key: kubernetes.io/metadata.name
-                operator: In
-                values:
-                  - postgres-prod
-                  - vault
-                  - sentinel
-                  - jiffy
-                  - mapache
-      ports:
+    - ports:
         - protocol: TCP
           port: 5432
