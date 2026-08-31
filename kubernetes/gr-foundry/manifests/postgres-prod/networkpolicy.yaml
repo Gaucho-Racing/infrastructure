@@ -17,7 +17,6 @@ spec:
                 operator: In
                 values:
                   - postgres-prod
-                  - cloudflared
                   - vault
                   - sentinel
                   - jiffy
