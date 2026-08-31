@@ -3,7 +3,6 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
-  - init-databases.yaml
   - vaultsecretsync.yaml
   - service.yaml
   - statefulset.yaml

@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: postgres
+  name: postgres-prod
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -10,10 +10,10 @@ spec:
   source:
     repoURL: https://github.com/Gaucho-Racing/infrastructure.git
     targetRevision: main
-    path: kubernetes/gr-foundry/manifests/postgres
+    path: kubernetes/gr-foundry/manifests/postgres-prod
   destination:
     server: https://kubernetes.default.svc
-    namespace: postgres
+    namespace: postgres-prod
   syncPolicy:
     automated:
       prune: true

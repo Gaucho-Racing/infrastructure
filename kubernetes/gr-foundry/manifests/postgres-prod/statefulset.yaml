@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: postgres
-  namespace: postgres
+  name: postgres-prod
+  namespace: postgres-prod
 spec:
-  serviceName: postgres
+  serviceName: postgres-prod
   replicas: 1
   selector:
     matchLabels:
-      app: postgres
+      app: postgres-prod
   template:
     metadata:
       labels:
-        app: postgres
+        app: postgres-prod
     spec:
       terminationGracePeriodSeconds: 120
       containers:
@@ -29,7 +29,7 @@ spec:
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: postgres-secrets
+                  name: postgres-prod-secrets
                   key: POSTGRES_PASSWORD
             - name: POSTGRES_INITDB_ARGS
               value: --data-checksums --auth-host=scram-sha-256
@@ -67,19 +67,11 @@ spec:
               cpu: "2"
               memory: 4Gi
           volumeMounts:
-            - name: postgres-data
+            - name: postgres-prod-data
               mountPath: /var/lib/postgresql
-            - name: postgres-init-databases
-              mountPath: /docker-entrypoint-initdb.d
-              readOnly: true
-      volumes:
-        - name: postgres-init-databases
-          configMap:
-            name: postgres-init-databases
-            defaultMode: 0555
   volumeClaimTemplates:
     - metadata:
-        name: postgres-data
+        name: postgres-prod-data
       spec:
         accessModes:
           - ReadWriteOnce

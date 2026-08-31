@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres
-  namespace: postgres
+  name: postgres-prod
+  namespace: postgres-prod
 spec:
   selector:
-    app: postgres
+    app: postgres-prod
   ports:
     - name: postgres
       port: 5432

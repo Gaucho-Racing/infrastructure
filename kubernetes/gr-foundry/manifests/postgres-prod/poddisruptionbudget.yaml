@@ -1,10 +1,10 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: postgres
-  namespace: postgres
+  name: postgres-prod
+  namespace: postgres-prod
 spec:
   minAvailable: 1
   selector:
     matchLabels:
-      app: postgres
+      app: postgres-prod
