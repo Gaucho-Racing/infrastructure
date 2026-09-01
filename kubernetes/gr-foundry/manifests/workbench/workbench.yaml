@@ -31,8 +31,6 @@ spec:
               value: postgres.workbench.svc.cluster.local
             - name: DATABASE_PORT
               value: "5432"
-            - name: DATABASE_USER
-              value: workbench
             - name: DATABASE_NAME
               value: workbench
             - name: SENTINEL_URL
