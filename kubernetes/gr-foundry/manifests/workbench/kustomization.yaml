@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - vaultsecretsync.yaml
+  - postgres.yaml
+  - configmap-kerbecs.yaml
+  - workbench.yaml
+  - web.yaml
+  - kerbecs.yaml
+  - ingress.yaml
+
+images:
+  - name: ghcr.io/gaucho-racing/workbench-server
+    newTag: 0.0.0
+  - name: ghcr.io/gaucho-racing/workbench-web
+    newTag: 0.0.0
+  - name: bk1031/kerbecs
+    newTag: 3.2.0

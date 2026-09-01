@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workbench
+  namespace: workbench
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: workbench
+  template:
+    metadata:
+      labels:
+        app: workbench
+    spec:
+      containers:
+        - name: workbench
+          image: ghcr.io/gaucho-racing/workbench-server:latest
+          ports:
+            - containerPort: 9999
+              name: http
+          envFrom:
+            - secretRef:
+                name: workbench-secrets
+          env:
+            - name: ENV
+              value: PROD
+            - name: PORT
+              value: "9999"
+            - name: DATABASE_HOST
+              value: postgres.workbench.svc.cluster.local
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_NAME
+              value: workbench
+            - name: SENTINEL_URL
+              value: https://sso.gauchoracing.com
+            - name: SENTINEL_CLIENT_ID
+              value: rmgwGSAfAx9Q
+            - name: SENTINEL_REDIRECT_URI
+              value: https://workbench.gauchoracing.com/auth/login
+            - name: QUERY_TIMEOUT
+              value: 30s
+            - name: QUERY_MAX_ROWS
+              value: "5000"
+            - name: QUERY_MAX_BYTES
+              value: "26214400"
+          startupProbe:
+            httpGet:
+              path: /ping
+              port: http
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+              ephemeral-storage: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+              ephemeral-storage: 5Gi
+          volumeMounts:
+            - name: temporary-exports
+              mountPath: /tmp
+      volumes:
+        - name: temporary-exports
+          emptyDir:
+            sizeLimit: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: workbench
+  namespace: workbench
+spec:
+  selector:
+    app: workbench
+  ports:
+    - name: http
+      port: 9999
+      targetPort: http

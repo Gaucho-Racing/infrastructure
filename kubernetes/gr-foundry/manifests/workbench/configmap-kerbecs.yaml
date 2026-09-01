@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kerbecs-config
+  namespace: workbench
+data:
+  kerbecs.yaml: |
+    gateway:
+      name: workbench-gateway
+      version: 0.1.0
+      env: ${ENV:PROD}
+      timeouts:
+        dial: 5s
+        headers: 30s
+        idle: 90s
+        overall: 0
+
+    listeners:
+      gateway:
+        port: "10310"
+      admin:
+        port: "10300"
+        auth:
+          type: basic
+          username: ${KERBECS_USER}
+          password: ${KERBECS_PASSWORD}
+
+    providers:
+      static:
+        watch: true
+        watch_mode: poll
+        watch_interval: 5s
+
+    upstreams:
+      workbench:
+        name: workbench
+        version: 0.1.0
+        instances:
+          - http://workbench.workbench.svc.cluster.local:9999
+        health_check:
+          path: /ping
+          interval: 10s
+          timeout: 3s
+        timeouts:
+          dial: 5s
+          headers: 120s
+          idle: 120s
+
+      web:
+        name: workbench-web
+        version: 0.1.0
+        instances:
+          - http://web.workbench.svc.cluster.local:80
+        health_check:
+          path: /healthz
+          interval: 10s
+          timeout: 3s
+
+    routes:
+      - name: workbench-api
+        match:
+          path: /api/*
+        upstream: workbench
+        rewrite:
+          strip_prefix: /api
+        envelope: passthrough
+        limits:
+          max_request_bytes: 60MB
+        timeouts:
+          overall: 0
+
+      - name: workbench-web
+        match:
+          path: /*
+        upstream: web
+        envelope: passthrough
