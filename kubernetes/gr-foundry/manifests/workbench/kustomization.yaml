@@ -13,8 +13,8 @@ resources:
 
 images:
   - name: ghcr.io/gaucho-racing/workbench-server
-    newTag: 1.0.0
+    newTag: 1.1.0
   - name: ghcr.io/gaucho-racing/workbench-web
-    newTag: 1.0.0
+    newTag: 1.1.0
   - name: bk1031/kerbecs
     newTag: 3.2.0
