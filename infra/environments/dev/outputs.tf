@@ -13,3 +13,8 @@ output "depot_dev_use1_bucket" {
   description = "S3 bucket name for Depot development storage in us-east-1."
   value       = aws_s3_bucket.depot_dev_use1.id
 }
+
+output "depot_dev_usw2_bucket" {
+  description = "S3 bucket name for Depot development storage in us-west-2."
+  value       = aws_s3_bucket.depot_dev_usw2.id
+}

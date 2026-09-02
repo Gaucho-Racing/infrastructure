@@ -31,6 +31,33 @@ resource "aws_s3_bucket_cors_configuration" "depot_dev_use1" {
   }
 }
 
+resource "aws_s3_bucket" "depot_dev_usw2" {
+  region = "us-west-2"
+  bucket = "gr-depot-dev-usw2"
+}
+
+resource "aws_s3_bucket_public_access_block" "depot_dev_usw2" {
+  region = "us-west-2"
+  bucket = aws_s3_bucket.depot_dev_usw2.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_cors_configuration" "depot_dev_usw2" {
+  region = "us-west-2"
+  bucket = aws_s3_bucket.depot_dev_usw2.id
+
+  cors_rule {
+    allowed_origins = ["http://localhost:10310"]
+    allowed_methods = ["GET", "PUT", "HEAD"]
+    allowed_headers = ["*"]
+    max_age_seconds = 3000
+  }
+}
+
 resource "aws_iam_user" "depot_dev" {
   name = "depot-dev"
 }
@@ -55,7 +82,10 @@ resource "aws_iam_user_policy" "depot_dev_s3" {
           "s3:AbortMultipartUpload",
           "s3:ListMultipartUploadParts",
         ]
-        Resource = "${aws_s3_bucket.depot_dev_use1.arn}/*"
+        Resource = [
+          "${aws_s3_bucket.depot_dev_use1.arn}/*",
+          "${aws_s3_bucket.depot_dev_usw2.arn}/*",
+        ]
       }
     ]
   })
