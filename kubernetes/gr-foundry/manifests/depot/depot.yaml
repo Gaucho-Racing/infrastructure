@@ -56,27 +56,6 @@ spec:
                 secretKeyRef:
                   name: depot-secrets
                   key: SENTINEL_SA_TOKEN
-            - name: STORAGE_BACKEND
-              value: s3
-            - name: S3_BUCKET
-              valueFrom:
-                secretKeyRef:
-                  name: depot-secrets
-                  key: S3_BUCKET
-            - name: S3_REGION
-              value: us-west-2
-            - name: S3_ACCESS_KEY_ID
-              valueFrom:
-                secretKeyRef:
-                  name: depot-secrets
-                  key: S3_ACCESS_KEY_ID
-            - name: S3_SECRET_ACCESS_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: depot-secrets
-                  key: S3_SECRET_ACCESS_KEY
-            - name: S3_FORCE_PATH_STYLE
-              value: "false"
             - name: PRESIGN_EXPIRY
               value: 15m
             - name: MAX_PROXY_UPLOAD_BYTES
