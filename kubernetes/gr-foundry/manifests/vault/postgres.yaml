@@ -12,4 +12,4 @@ metadata:
   namespace: vault
 spec:
   type: ExternalName
-  externalName: gr-postgres.gauchoracing.com
+  externalName: postgres-prod.postgres-prod.svc.cluster.local
