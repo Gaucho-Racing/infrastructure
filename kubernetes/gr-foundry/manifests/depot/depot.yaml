@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: depot
+  namespace: depot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: depot
+  template:
+    metadata:
+      labels:
+        app: depot
+    spec:
+      containers:
+        - name: depot
+          image: ghcr.io/gaucho-racing/depot-server:latest
+          ports:
+            - containerPort: 9999
+              name: http
+          env:
+            - name: ENV
+              value: PROD
+            - name: PORT
+              value: "9999"
+            - name: DATABASE_HOST
+              value: postgres.depot.svc.cluster.local
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_NAME
+              value: depot
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: depot-secrets
+                  key: DATABASE_USER
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: depot-secrets
+                  key: DATABASE_PASSWORD
+            - name: SENTINEL_URL
+              value: https://sso.gauchoracing.com
+            - name: SENTINEL_CLIENT_ID
+              value: Z5cwPi05LlBv
+            - name: SENTINEL_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: depot-secrets
+                  key: SENTINEL_CLIENT_SECRET
+            - name: SENTINEL_REDIRECT_URI
+              value: https://depot.gauchoracing.com/auth/login
+            - name: SENTINEL_SA_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: depot-secrets
+                  key: SENTINEL_SA_TOKEN
+            - name: PRESIGN_EXPIRY
+              value: 15m
+            - name: MAX_PROXY_UPLOAD_BYTES
+              value: "104857600"
+          startupProbe:
+            httpGet:
+              path: /ping
+              port: http
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: depot
+  namespace: depot
+spec:
+  selector:
+    app: depot
+  ports:
+    - name: http
+      port: 9999
+      targetPort: http
