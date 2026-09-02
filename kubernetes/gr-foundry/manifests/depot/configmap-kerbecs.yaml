@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kerbecs-config
+  namespace: depot
+data:
+  kerbecs.yaml: |
+    gateway:
+      name: depot-gateway
+      version: 0.1.0
+      env: ${ENV:PROD}
+      timeouts:
+        dial: 5s
+        headers: 120s
+        idle: 120s
+        overall: 0
+
+    listeners:
+      gateway:
+        port: "10310"
+      admin:
+        port: "10300"
+        auth:
+          type: basic
+          username: ${KERBECS_USER}
+          password: ${KERBECS_PASSWORD}
+
+    providers:
+      static:
+        watch: true
+        watch_mode: poll
+        watch_interval: 5s
+
+    upstreams:
+      depot:
+        name: depot
+        version: 0.1.0
+        instances:
+          - http://depot.depot.svc.cluster.local:9999
+        health_check:
+          path: /ping
+          interval: 10s
+          timeout: 3s
+        timeouts:
+          dial: 5s
+          headers: 120s
+          idle: 120s
+
+      web:
+        name: depot-web
+        version: 0.1.0
+        instances:
+          - http://web.depot.svc.cluster.local:80
+        health_check:
+          path: /healthz
+          interval: 10s
+          timeout: 3s
+
+    routes:
+      - name: depot-api
+        match:
+          path: /api/*
+        upstream: depot
+        rewrite:
+          strip_prefix: /api
+        envelope: passthrough
+        limits:
+          max_request_bytes: 110MB
+        timeouts:
+          overall: 0
+
+      - name: depot-web
+        match:
+          path: /*
+        upstream: web
+        envelope: passthrough
