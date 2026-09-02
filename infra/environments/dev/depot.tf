@@ -2,12 +2,6 @@
 # presigned URLs only — no ListBucket. The access key secret is in TF state;
 # read it with `terraform output -raw depot_dev_secret_access_key` → each
 # developer's .env.
-resource "aws_s3_bucket" "depot_dev" {
-  region        = "us-west-2"
-  bucket        = "gr-depot-dev"
-  force_destroy = true
-}
-
 resource "aws_s3_bucket" "depot_dev_use1" {
   region = "us-east-1"
   bucket = "gr-depot-dev-use1"
