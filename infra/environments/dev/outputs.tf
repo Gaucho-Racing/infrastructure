@@ -8,3 +8,8 @@ output "depot_dev_secret_access_key" {
   value       = aws_iam_access_key.depot_dev.secret
   sensitive   = true
 }
+
+output "depot_dev_use1_bucket" {
+  description = "S3 bucket name for Depot development storage in us-east-1."
+  value       = aws_s3_bucket.depot_dev_use1.id
+}

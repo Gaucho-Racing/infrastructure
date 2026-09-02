@@ -2,12 +2,14 @@
 # presigned URLs only — no ListBucket. The access key secret is in TF state;
 # read it with `terraform output -raw depot_dev_secret_access_key` → each
 # developer's .env.
-resource "aws_s3_bucket" "depot_dev" {
-  bucket = "gr-depot-dev"
+resource "aws_s3_bucket" "depot_dev_use1" {
+  region = "us-east-1"
+  bucket = "gr-depot-dev-use1"
 }
 
-resource "aws_s3_bucket_public_access_block" "depot_dev" {
-  bucket = aws_s3_bucket.depot_dev.id
+resource "aws_s3_bucket_public_access_block" "depot_dev_use1" {
+  region = "us-east-1"
+  bucket = aws_s3_bucket.depot_dev_use1.id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -17,8 +19,9 @@ resource "aws_s3_bucket_public_access_block" "depot_dev" {
 
 # The web UI's presigned upload flow PUTs directly from the browser to S3,
 # which is cross-origin from the local kerbecs gateway.
-resource "aws_s3_bucket_cors_configuration" "depot_dev" {
-  bucket = aws_s3_bucket.depot_dev.id
+resource "aws_s3_bucket_cors_configuration" "depot_dev_use1" {
+  region = "us-east-1"
+  bucket = aws_s3_bucket.depot_dev_use1.id
 
   cors_rule {
     allowed_origins = ["http://localhost:10310"]
@@ -52,7 +55,7 @@ resource "aws_iam_user_policy" "depot_dev_s3" {
           "s3:AbortMultipartUpload",
           "s3:ListMultipartUploadParts",
         ]
-        Resource = "${aws_s3_bucket.depot_dev.arn}/*"
+        Resource = "${aws_s3_bucket.depot_dev_use1.arn}/*"
       }
     ]
   })

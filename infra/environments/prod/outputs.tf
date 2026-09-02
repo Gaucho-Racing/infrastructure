@@ -11,3 +11,24 @@ output "mapache_prod_secret_access_key" {
   value       = aws_iam_access_key.mapache_prod.secret
   sensitive   = true
 }
+
+output "depot_prod_usw2_bucket" {
+  description = "S3 bucket name for Depot production storage in us-west-2."
+  value       = aws_s3_bucket.depot_prod_usw2.id
+}
+
+output "depot_prod_use1_bucket" {
+  description = "S3 bucket name for Depot production storage in us-east-1."
+  value       = aws_s3_bucket.depot_prod_use1.id
+}
+
+output "depot_prod_access_key_id" {
+  description = "Access key ID for the depot-prod IAM user. Configure it through Depot's storage backend UI or API."
+  value       = aws_iam_access_key.depot_prod.id
+}
+
+output "depot_prod_secret_access_key" {
+  description = "Secret access key for the depot-prod IAM user. Configure it through Depot's storage backend UI or API."
+  value       = aws_iam_access_key.depot_prod.secret
+  sensitive   = true
+}
