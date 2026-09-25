@@ -75,6 +75,12 @@ data:
         instances:
           - http://google.sentinel.svc.cluster.local:9995
 
+      github:
+        name: sentinel-github
+        version: 0.1.0
+        instances:
+          - http://github.sentinel.svc.cluster.local:9994
+
       web:
         name: sentinel-web
         version: 0.1.0
@@ -170,6 +176,14 @@ data:
         match:
           path: /api/google/*
         upstream: google
+        rewrite:
+          strip_prefix: /api
+        envelope: passthrough
+
+      - name: github
+        match:
+          path: /api/github/*
+        upstream: github
         rewrite:
           strip_prefix: /api
         envelope: passthrough

@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: github
+  namespace: sentinel
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: github
+  template:
+    metadata:
+      labels:
+        app: github
+    spec:
+      containers:
+        - name: github
+          image: ghcr.io/gaucho-racing/sentinel-github:latest
+          ports:
+            - containerPort: 9994
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          envFrom:
+            - secretRef:
+                name: sentinel-secrets
+            - secretRef:
+                name: sentinel-github-secrets
+          env:
+            - name: PORT
+              value: "9994"
+            - name: GITHUB_ORG
+              value: gaucho-racing
+            - name: GITHUB_REDIRECT_URI
+              value: https://sso.gauchoracing.com/api/github/callback
+            - name: GITHUB_SYNC_INTERVAL
+              value: 1h
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: github
+  namespace: sentinel
+spec:
+  selector:
+    app: github
+  ports:
+    - port: 9994
+      targetPort: 9994
