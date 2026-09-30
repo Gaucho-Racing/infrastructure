@@ -32,7 +32,7 @@ spec:
             - name: EULA
               value: "TRUE"
             - name: MEMORY
-              value: 4G
+              value: 8G
             - name: USE_AIKAR_FLAGS
               value: "true"
             - name: CFG_WARDEN_BASE_URL
@@ -42,13 +42,15 @@ spec:
                 secretKeyRef:
                   name: minecraft-secrets
                   key: PLUGIN_TOKEN
+          # Heap plus ~2Gi for metaspace, direct buffers and native memory.
+          # The tick loop is one thread, so a tight CPU limit throttles it.
           resources:
             requests:
-              cpu: "1"
-              memory: 5Gi
+              cpu: "2"
+              memory: 10Gi
             limits:
-              cpu: "4"
-              memory: 6Gi
+              cpu: "8"
+              memory: 10Gi
           # First boot downloads Paper and plugins and generates the world.
           startupProbe:
             exec:
