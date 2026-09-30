@@ -1,6 +1,6 @@
 # Dials out to the frps relay in AWS (infra/modules/minecraft-relay) and
 # carries player traffic from its public 25565 back to the minecraft
-# Service. play.gauchoracing.com is an unproxied A record on the relay's
+# Service. mc.gauchoracing.com is an unproxied A record on the relay's
 # EIP; until it exists frpc just keeps retrying.
 apiVersion: v1
 kind: ConfigMap
@@ -9,7 +9,7 @@ metadata:
   namespace: warden
 data:
   frpc.toml: |
-    serverAddr = "play.gauchoracing.com"
+    serverAddr = "mc.gauchoracing.com"
     serverPort = 7000
     loginFailExit = false
     auth.method = "token"

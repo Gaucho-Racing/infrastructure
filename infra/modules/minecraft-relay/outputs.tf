@@ -4,7 +4,7 @@ output "instance_id" {
 }
 
 output "public_ip" {
-  description = "EIP players and frpc connect to. Point an unproxied play.gauchoracing.com A record at it."
+  description = "EIP players and frpc connect to. Point an unproxied mc.gauchoracing.com A record at it."
   value       = aws_eip.this.public_ip
 }
 

@@ -34,7 +34,7 @@ output "depot_prod_secret_access_key" {
 }
 
 output "minecraft_relay_public_ip" {
-  description = "EIP of the Minecraft relay. Point an unproxied play.gauchoracing.com A record at it."
+  description = "EIP of the Minecraft relay. Point an unproxied mc.gauchoracing.com A record at it."
   value       = module.minecraft_relay.public_ip
 }
 

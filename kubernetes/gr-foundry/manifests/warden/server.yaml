@@ -44,9 +44,9 @@ spec:
             - name: SENTINEL_CLIENT_ID
               value: rp7FortD3Vtp
             - name: SENTINEL_REDIRECT_URI
-              value: https://mc.gauchoracing.com/auth/login
+              value: https://warden.gauchoracing.com/auth/login
             - name: PUBLIC_BASE_URL
-              value: https://mc.gauchoracing.com
+              value: https://warden.gauchoracing.com
             - name: LINK_TOKEN_TTL
               value: 15m
             - name: GROUP_SYNC_INTERVAL
