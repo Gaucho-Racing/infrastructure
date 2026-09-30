@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server
+  namespace: warden
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: server
+  template:
+    metadata:
+      labels:
+        app: server
+    spec:
+      containers:
+        - name: server
+          image: ghcr.io/gaucho-racing/warden-server:latest
+          ports:
+            - containerPort: 9999
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          envFrom:
+            - secretRef:
+                name: warden-secrets
+          env:
+            - name: ENV
+              value: PROD
+            - name: PORT
+              value: "9999"
+            - name: DATABASE_HOST
+              value: postgres.warden.svc.cluster.local
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_NAME
+              value: warden
+            - name: SENTINEL_URL
+              value: https://sso.gauchoracing.com
+            - name: SENTINEL_CLIENT_ID
+              value: rp7FortD3Vtp
+            - name: SENTINEL_REDIRECT_URI
+              value: https://mc.gauchoracing.com/auth/login
+            - name: PUBLIC_BASE_URL
+              value: https://mc.gauchoracing.com
+            - name: LINK_TOKEN_TTL
+              value: 15m
+            - name: GROUP_SYNC_INTERVAL
+              value: 60s
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 9999
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: server
+  namespace: warden
+spec:
+  selector:
+    app: server
+  ports:
+    - port: 9999
+      targetPort: 9999

@@ -1,0 +1,90 @@
+# The image (Warden repo, minecraft-server/) pins Paper, plugins and every
+# config file; only sizing and secrets are set here. RCON listens on 25575
+# with the password baked into the image, so networkpolicy.yaml keeps it
+# unreachable from other pods.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: minecraft
+  namespace: warden
+spec:
+  replicas: 1
+  serviceName: minecraft
+  selector:
+    matchLabels:
+      app: minecraft
+  template:
+    metadata:
+      labels:
+        app: minecraft
+    spec:
+      # Long enough for the save on shutdown to finish before SIGKILL.
+      terminationGracePeriodSeconds: 120
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: minecraft
+          image: ghcr.io/gaucho-racing/warden-minecraft:latest
+          ports:
+            - containerPort: 25565
+              name: minecraft
+          env:
+            - name: EULA
+              value: "TRUE"
+            - name: MEMORY
+              value: 4G
+            - name: USE_AIKAR_FLAGS
+              value: "true"
+            - name: CFG_WARDEN_BASE_URL
+              value: http://kerbecs.warden.svc.cluster.local:10310
+            - name: CFG_WARDEN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: minecraft-secrets
+                  key: PLUGIN_TOKEN
+          resources:
+            requests:
+              cpu: "1"
+              memory: 5Gi
+            limits:
+              cpu: "4"
+              memory: 6Gi
+          # First boot downloads Paper and plugins and generates the world.
+          startupProbe:
+            exec:
+              command: ["mc-health"]
+            periodSeconds: 10
+            failureThreshold: 60
+          readinessProbe:
+            exec:
+              command: ["mc-health"]
+            periodSeconds: 15
+          livenessProbe:
+            exec:
+              command: ["mc-health"]
+            periodSeconds: 30
+            failureThreshold: 5
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 30Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minecraft
+  namespace: warden
+spec:
+  selector:
+    app: minecraft
+  ports:
+    - name: minecraft
+      port: 25565
+      targetPort: 25565

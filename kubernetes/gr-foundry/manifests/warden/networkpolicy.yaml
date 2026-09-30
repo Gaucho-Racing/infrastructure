@@ -1,0 +1,22 @@
+# Only frpc may reach the game port, and nothing may reach RCON (25575):
+# its password is public in the image. mc-health and rcon-cli run inside
+# the pod and are unaffected.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: minecraft
+  namespace: warden
+spec:
+  podSelector:
+    matchLabels:
+      app: minecraft
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frpc
+      ports:
+        - protocol: TCP
+          port: 25565
