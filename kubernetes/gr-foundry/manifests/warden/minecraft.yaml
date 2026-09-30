@@ -20,6 +20,9 @@ spec:
     spec:
       # Long enough for the save on shutdown to finish before SIGKILL.
       terminationGracePeriodSeconds: 120
+      # The backend's Service is named `server`, so service links would
+      # inject SERVER_PORT=tcp://..., which itzg reads as the game port.
+      enableServiceLinks: false
       securityContext:
         fsGroup: 1000
       containers:
@@ -69,11 +72,16 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /data
+  # apiVersion, kind and volumeMode match what the API server defaults, so
+  # ArgoCD does not report the StatefulSet as permanently OutOfSync.
   volumeClaimTemplates:
-    - metadata:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
         name: data
       spec:
         accessModes: ["ReadWriteOnce"]
+        volumeMode: Filesystem
         resources:
           requests:
             storage: 30Gi
