@@ -32,3 +32,19 @@ output "depot_prod_secret_access_key" {
   value       = aws_iam_access_key.depot_prod.secret
   sensitive   = true
 }
+
+output "minecraft_relay_public_ip" {
+  description = "EIP of the Minecraft relay. Point an unproxied mc.gauchoracing.com A record at it."
+  value       = module.minecraft_relay.public_ip
+}
+
+output "minecraft_relay_instance_id" {
+  description = "Minecraft relay instance ID, for `aws ssm start-session`."
+  value       = module.minecraft_relay.instance_id
+}
+
+output "minecraft_relay_frp_token" {
+  description = "frp token for the Minecraft relay. Seed into the Vault secret `warden-prod` as frp_token."
+  value       = module.minecraft_relay.frp_token
+  sensitive   = true
+}

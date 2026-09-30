@@ -1,0 +1,28 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - vaultsecretsync.yaml
+  - configmap-kerbecs.yaml
+  - postgres.yaml
+  - kerbecs.yaml
+  - server.yaml
+  - web.yaml
+  - ingress.yaml
+  - minecraft.yaml
+  - frpc.yaml
+  - networkpolicy.yaml
+
+images:
+  - name: ghcr.io/gaucho-racing/warden-server
+    newTag: sha-5f482ed
+  - name: ghcr.io/gaucho-racing/warden-web
+    newTag: sha-5f482ed
+  - name: ghcr.io/gaucho-racing/warden-minecraft
+    newTag: sha-5f482ed
+  - name: bk1031/kerbecs
+    newTag: 3.2.0
+  # Must match frp_version in infra/modules/minecraft-relay.
+  - name: ghcr.io/fatedier/frpc
+    newTag: v0.71.0

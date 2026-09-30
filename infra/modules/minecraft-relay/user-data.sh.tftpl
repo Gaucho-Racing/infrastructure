@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euxo pipefail
+
+archive="frp_${frp_version}_linux_arm64"
+curl -fsSL -o "/tmp/$archive.tar.gz" \
+  "https://github.com/fatedier/frp/releases/download/v${frp_version}/$archive.tar.gz"
+echo "${frp_sha256}  /tmp/$archive.tar.gz" | sha256sum -c -
+tar -xzf "/tmp/$archive.tar.gz" -C /tmp
+install -m 0755 "/tmp/$archive/frps" /usr/local/bin/frps
+
+install -d -m 0750 /etc/frp
+cat >/etc/frp/frps.toml <<'EOF'
+bindPort = ${frp_bind_port}
+auth.method = "token"
+auth.token = "${frp_token}"
+transport.tls.force = true
+allowPorts = [{ single = ${minecraft_port} }]
+EOF
+chmod 0640 /etc/frp/frps.toml
+
+cat >/etc/systemd/system/frps.service <<'EOF'
+[Unit]
+Description=frp server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# DynamicUser cannot read the root-owned config, so hand it over as a
+# systemd credential instead.
+DynamicUser=yes
+LoadCredential=frps.toml:/etc/frp/frps.toml
+ExecStart=/usr/local/bin/frps -c $${CREDENTIALS_DIRECTORY}/frps.toml
+Restart=always
+RestartSec=5
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now frps
