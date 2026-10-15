@@ -20,7 +20,8 @@ else
 fi
 
 if [[ "$PR_TITLE" =~ ^Deploy:\ ([^ ]+)\ to\ ([^ ]+) ]]; then
-  target="**${BASH_REMATCH[1]} ${BASH_REMATCH[2]}**"
+  service="${BASH_REMATCH[1]}"
+  target="**${service^} ${BASH_REMATCH[2]}**"
 else
   target="**${PR_TITLE}**"
 fi
