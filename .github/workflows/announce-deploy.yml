@@ -1,0 +1,35 @@
+name: announce-deploy
+run-name: Announce ${{ github.event.pull_request.title }}
+
+# pull_request_target runs the workflow from main, so a deploy PR cannot
+# change what runs with these secrets. The PR's code is never checked out.
+on:
+  pull_request_target:
+    types: [review_requested]
+
+jobs:
+  announce:
+    if: startsWith(github.event.pull_request.head.ref, 'bot/bump-') && github.event.requested_reviewer
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Pull secrets
+        uses: Gaucho-Racing/vault-pull-secrets@v1
+        with:
+          secrets: |
+            infrastructure.announce_token
+            infrastructure.announce_channel_id
+
+      - name: Announce in Discord
+        run: .github/scripts/announce-deploy.sh
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REVIEWER_ID: ${{ github.event.requested_reviewer.id }}
+          REVIEWER_LOGIN: ${{ github.event.requested_reviewer.login }}
