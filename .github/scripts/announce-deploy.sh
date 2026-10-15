@@ -26,14 +26,32 @@ else
   target="**${PR_TITLE}**"
 fi
 
-content="${who} wants to deploy ${target}! [infrastructure#${PR_NUMBER}](<${PR_URL}>)"
+content="${who} wants to deploy ${target}!"
 
-jq -n --arg channels "$DISCORD_CHANNEL_IDS" --arg content "$content" '{
+changes=$(sed -n '/^## Changes since/,/View all changes/p' <<<"${PR_BODY:-}" | sed -E 's/^## (.*)/**\1**/')
+description="${changes:-${PR_BODY:-}}"
+
+jq -n \
+  --arg channels "$DISCORD_CHANNEL_IDS" \
+  --arg content "$content" \
+  --arg title "$PR_TITLE" \
+  --arg url "$PR_URL" \
+  --arg description "$description" \
+  --arg footer "Gaucho-Racing/infrastructure#${PR_NUMBER}" \
+  --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" '{
   channel: "DISCORD",
   category: "deploy",
   recipients: { entity_ids: [], group_ids: [], discord_channel_ids: ($channels | split(" ") | map(select(. != ""))) },
   discord: {
     content: $content,
+    embeds: [{
+      title: $title[0:256],
+      url: $url,
+      description: (if $description == "" then null else $description[0:4000] end),
+      color: 14747043,
+      footer: { text: $footer },
+      timestamp: $timestamp
+    } | with_entries(select(.value != null))],
     webhook: { username: "GitHub", avatar_url: "https://notify.gauchoracing.com/logo/github.png" }
   }
 }' | curl -fsS --max-time 15 -X POST "${NOTIFY_URL%/}/messages" \

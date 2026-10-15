@@ -29,6 +29,7 @@ jobs:
           DISCORD_CHANNEL_IDS: "1253546219498766357"
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_BODY: ${{ github.event.pull_request.body }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REVIEWER_ID: ${{ github.event.requested_reviewer.id }}
           REVIEWER_LOGIN: ${{ github.event.requested_reviewer.login }}
