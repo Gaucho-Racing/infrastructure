@@ -26,7 +26,7 @@ else
   target="**${PR_TITLE}**"
 fi
 
-content="${who} wants to deploy ${target}! [infrastructure#${PR_NUMBER}](${PR_URL})"
+content="${who} wants to deploy ${target}! [infrastructure#${PR_NUMBER}](<${PR_URL}>)"
 
 jq -n --arg channels "$DISCORD_CHANNEL_IDS" --arg content "$content" '{
   channel: "DISCORD",
