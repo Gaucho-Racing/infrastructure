@@ -34,7 +34,7 @@ jq -n --arg channels "$DISCORD_CHANNEL_IDS" --arg content "$content" '{
   recipients: { entity_ids: [], group_ids: [], discord_channel_ids: ($channels | split(" ") | map(select(. != ""))) },
   discord: {
     content: $content,
-    webhook: { username: "GitHub", avatar_url: "https://notify.gauchoracing.com/integrations/github.png" }
+    webhook: { username: "GitHub", avatar_url: "https://notify.gauchoracing.com/logo/github.png" }
   }
 }' | curl -fsS --max-time 15 -X POST "${NOTIFY_URL%/}/messages" \
   -H "Authorization: Bearer ${NOTIFY_TOKEN}" \
