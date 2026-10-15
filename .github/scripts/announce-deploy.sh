@@ -6,7 +6,7 @@ SENTINEL_URL="${SENTINEL_URL:-https://sso.gauchoracing.com/api}"
 
 discord_id=$(
   curl -fsS --max-time 10 "${SENTINEL_URL%/}/core/entity/external/GITHUB/${REVIEWER_ID}" \
-    -H "Authorization: Bearer ${ANNOUNCE_TOKEN}" \
+    -H "Authorization: Bearer ${NOTIFY_TOKEN}" \
     | jq -r '[.external_auths[]? | select(.provider == "DISCORD") | .external_id][0] // empty'
 ) || {
   echo "::warning::Could not look up a Discord account for GitHub user ${REVIEWER_LOGIN}."
@@ -28,16 +28,16 @@ fi
 
 content="${who} wants to deploy ${target}! [infrastructure#${PR_NUMBER}](<${PR_URL}>)"
 
-jq -n --arg channel "$ANNOUNCE_CHANNEL_ID" --arg content "$content" '{
+jq -n --arg channels "$DISCORD_CHANNEL_IDS" --arg content "$content" '{
   channel: "DISCORD",
   category: "deploy",
-  recipients: { entity_ids: [], group_ids: [], discord_channel_ids: [$channel] },
+  recipients: { entity_ids: [], group_ids: [], discord_channel_ids: ($channels | split(" ") | map(select(. != ""))) },
   discord: {
     content: $content,
     webhook: { username: "Deploys", avatar_url: "https://gauchoracing.com/logo/gr-logo.png" }
   }
 }' | curl -fsS --max-time 15 -X POST "${NOTIFY_URL%/}/messages" \
-  -H "Authorization: Bearer ${ANNOUNCE_TOKEN}" \
+  -H "Authorization: Bearer ${NOTIFY_TOKEN}" \
   -H "Content-Type: application/json" \
   --data @-
 echo

@@ -21,13 +21,12 @@ jobs:
       - name: Pull secrets
         uses: Gaucho-Racing/vault-pull-secrets@v1
         with:
-          secrets: |
-            infrastructure.announce_token
-            infrastructure.announce_channel_id
+          secrets: infrastructure.notify_token
 
       - name: Announce in Discord
         run: .github/scripts/announce-deploy.sh
         env:
+          DISCORD_CHANNEL_IDS: "1253546219498766357"
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_URL: ${{ github.event.pull_request.html_url }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
