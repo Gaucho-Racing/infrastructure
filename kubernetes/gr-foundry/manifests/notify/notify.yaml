@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notify
+  namespace: notify
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notify
+  template:
+    metadata:
+      labels:
+        app: notify
+    spec:
+      containers:
+        - name: notify
+          image: ghcr.io/gaucho-racing/notify-server:latest
+          ports:
+            - containerPort: 9999
+              name: http
+          env:
+            - name: ENV
+              value: PROD
+            - name: PORT
+              value: "9999"
+            - name: DATABASE_HOST
+              value: postgres.notify.svc.cluster.local
+            - name: DATABASE_PORT
+              value: "5432"
+            - name: DATABASE_NAME
+              value: notify
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: notify-secrets
+                  key: DATABASE_USER
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: notify-secrets
+                  key: DATABASE_PASSWORD
+            - name: SENTINEL_URL
+              value: https://sso.gauchoracing.com
+            - name: SENTINEL_CLIENT_ID
+              value: kpAUAmGzaunm
+            - name: SENTINEL_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: notify-secrets
+                  key: SENTINEL_CLIENT_SECRET
+            - name: SENTINEL_REDIRECT_URI
+              value: https://notify.gauchoracing.com/auth/login
+            - name: SENTINEL_SA_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: notify-secrets
+                  key: SENTINEL_SA_TOKEN
+            - name: ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: notify-secrets
+                  key: ENCRYPTION_KEY
+            - name: WORKER_CONCURRENCY
+              value: "8"
+            - name: DELIVERY_MAX_ATTEMPTS
+              value: "6"
+          startupProbe:
+            httpGet:
+              path: /ping
+              port: http
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notify
+  namespace: notify
+spec:
+  selector:
+    app: notify
+  ports:
+    - name: http
+      port: 9999
+      targetPort: http
