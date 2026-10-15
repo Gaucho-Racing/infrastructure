@@ -39,6 +39,12 @@ spec:
               value: postgres.sentinel.svc.cluster.local
             - name: DATABASE_PORT
               value: "5432"
+            - name: NOTIFY_EMAIL_SENDER_ID
+              value: esnd_01m4za88zfw3310j6aacrhag6s
+            - name: NOTIFY_SMS_SENDER_ID
+              value: ssnd_01m4z6ygkgws91kavw6hwn0ykn
+            - name: NOTIFY_DISCORD_SENDER_ID
+              value: dbot_01m4z54xxz7crdnynk9b9z0tdg
 ---
 apiVersion: v1
 kind: Service
