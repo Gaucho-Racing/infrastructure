@@ -51,6 +51,8 @@ spec:
                   key: SENTINEL_CLIENT_SECRET
             - name: SENTINEL_REDIRECT_URI
               value: https://notify.gauchoracing.com/auth/login
+            - name: PUBLIC_API_URL
+              value: https://notify.gauchoracing.com/api
             - name: SENTINEL_SA_TOKEN
               valueFrom:
                 secretKeyRef:
