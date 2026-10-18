@@ -1,0 +1,84 @@
+# Best-effort deploy log for #devops. Every Application is subscribed through
+# `subscriptions`, so no per-app annotations are needed. Bodies are built
+# with sprig dict/toJson so app names and sync messages are always escaped.
+#
+# Prune=false,Delete=false: this ConfigMap is shared with the upstream
+# install. Removing this Application must never delete it.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+data:
+  context: |
+    argocdUrl: https://argocd.gauchoracing.com
+    discordChannel: "1253546219498766357"
+
+  service.webhook.notify: |
+    url: https://notify.gauchoracing.com/api/messages
+    headers:
+      - name: Authorization
+        value: Bearer $notify-token
+      - name: Content-Type
+        value: application/json
+
+  template.app-deployed: |
+    webhook:
+      notify:
+        method: POST
+        body: |
+          {{- $link := printf "[%s](<%s/applications/argocd/%s>)" .app.metadata.name .context.argocdUrl .app.metadata.name -}}
+          {{- $content := printf "✅ %s synced to `%s`" $link (trunc 7 .app.status.operationState.syncResult.revision) -}}
+          {{- $recipients := dict "entity_ids" (list) "group_ids" (list) "discord_channel_ids" (list .context.discordChannel) -}}
+          {{- $discord := dict "content" $content "webhook" (dict "username" "Argo CD" "avatar_url" "https://argo-cd.readthedocs.io/en/stable/assets/logo.png") -}}
+          {{ dict "channel" "DISCORD" "category" "argocd" "recipients" $recipients "discord" $discord | toJson }}
+
+  template.app-sync-failed: |
+    webhook:
+      notify:
+        method: POST
+        body: |
+          {{- $link := printf "[%s](<%s/applications/argocd/%s>)" .app.metadata.name .context.argocdUrl .app.metadata.name -}}
+          {{- $content := printf "❌ %s sync failed: %s" $link (trunc 1500 .app.status.operationState.message) -}}
+          {{- $recipients := dict "entity_ids" (list) "group_ids" (list) "discord_channel_ids" (list .context.discordChannel) -}}
+          {{- $discord := dict "content" $content "webhook" (dict "username" "Argo CD" "avatar_url" "https://argo-cd.readthedocs.io/en/stable/assets/logo.png") -}}
+          {{ dict "channel" "DISCORD" "category" "argocd" "recipients" $recipients "discord" $discord | toJson }}
+
+  template.app-health-degraded: |
+    webhook:
+      notify:
+        method: POST
+        body: |
+          {{- $link := printf "[%s](<%s/applications/argocd/%s>)" .app.metadata.name .context.argocdUrl .app.metadata.name -}}
+          {{- $content := printf "⚠️ %s is %s" $link .app.status.health.status -}}
+          {{- $recipients := dict "entity_ids" (list) "group_ids" (list) "discord_channel_ids" (list .context.discordChannel) -}}
+          {{- $discord := dict "content" $content "webhook" (dict "username" "Argo CD" "avatar_url" "https://argo-cd.readthedocs.io/en/stable/assets/logo.png") -}}
+          {{ dict "channel" "DISCORD" "category" "argocd" "recipients" $recipients "discord" $discord | toJson }}
+
+  # The infrastructure repo drives every app, so oncePer keys on the revision
+  # each app last synced rather than the repo head; otherwise every commit
+  # would notify for every app.
+  trigger.on-deployed: |
+    - when: app.status?.operationState.phase in ['Succeeded'] and app.status.health.status == 'Healthy'
+      oncePer: app.status?.operationState.syncResult.revision
+      send: [app-deployed]
+
+  trigger.on-sync-failed: |
+    - when: app.status?.operationState.phase in ['Error', 'Failed']
+      oncePer: app.status?.operationState.syncResult.revision
+      send: [app-sync-failed]
+
+  trigger.on-health-degraded: |
+    - when: app.status.health.status == 'Degraded'
+      send: [app-health-degraded]
+
+  subscriptions: |
+    - recipients:
+        - notify
+      triggers:
+        - on-deployed
+        - on-sync-failed
+        - on-health-degraded
