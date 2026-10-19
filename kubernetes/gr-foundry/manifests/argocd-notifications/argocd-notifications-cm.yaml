@@ -15,7 +15,7 @@ metadata:
 data:
   context: |
     argocdUrl: https://argocd.gauchoracing.com
-    discordChannel: "1253546219498766357"
+    discordChannel: "1560188083461423134"
 
   service.webhook.notify: |
     url: https://notify.gauchoracing.com/api/messages
@@ -33,7 +33,7 @@ data:
           {{- $link := printf "[%s](<%s/applications/argocd/%s>)" .app.metadata.name .context.argocdUrl .app.metadata.name -}}
           {{- $content := printf "✅ %s synced to `%s`" $link (trunc 7 .app.status.operationState.syncResult.revision) -}}
           {{- $recipients := dict "entity_ids" (list) "group_ids" (list) "discord_channel_ids" (list .context.discordChannel) -}}
-          {{- $discord := dict "content" $content "webhook" (dict "username" "Argo CD" "avatar_url" "https://argo-cd.readthedocs.io/en/stable/assets/logo.png") -}}
+          {{- $discord := dict "content" $content "webhook" (dict "username" "ArgoCD" "avatar_url" "https://notify.gauchoracing.com/logo/argocd.png") -}}
           {{ dict "channel" "DISCORD" "category" "argocd" "recipients" $recipients "discord" $discord | toJson }}
 
   template.app-sync-failed: |
@@ -44,7 +44,7 @@ data:
           {{- $link := printf "[%s](<%s/applications/argocd/%s>)" .app.metadata.name .context.argocdUrl .app.metadata.name -}}
           {{- $content := printf "❌ %s sync failed: %s" $link (trunc 1500 .app.status.operationState.message) -}}
           {{- $recipients := dict "entity_ids" (list) "group_ids" (list) "discord_channel_ids" (list .context.discordChannel) -}}
-          {{- $discord := dict "content" $content "webhook" (dict "username" "Argo CD" "avatar_url" "https://argo-cd.readthedocs.io/en/stable/assets/logo.png") -}}
+          {{- $discord := dict "content" $content "webhook" (dict "username" "ArgoCD" "avatar_url" "https://notify.gauchoracing.com/logo/argocd.png") -}}
           {{ dict "channel" "DISCORD" "category" "argocd" "recipients" $recipients "discord" $discord | toJson }}
 
   template.app-health-degraded: |
@@ -55,7 +55,7 @@ data:
           {{- $link := printf "[%s](<%s/applications/argocd/%s>)" .app.metadata.name .context.argocdUrl .app.metadata.name -}}
           {{- $content := printf "⚠️ %s is %s" $link .app.status.health.status -}}
           {{- $recipients := dict "entity_ids" (list) "group_ids" (list) "discord_channel_ids" (list .context.discordChannel) -}}
-          {{- $discord := dict "content" $content "webhook" (dict "username" "Argo CD" "avatar_url" "https://argo-cd.readthedocs.io/en/stable/assets/logo.png") -}}
+          {{- $discord := dict "content" $content "webhook" (dict "username" "ArgoCD" "avatar_url" "https://notify.gauchoracing.com/logo/argocd.png") -}}
           {{ dict "channel" "DISCORD" "category" "argocd" "recipients" $recipients "discord" $discord | toJson }}
 
   # The infrastructure repo drives every app, so oncePer keys on the revision
