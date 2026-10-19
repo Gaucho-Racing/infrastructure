@@ -1,0 +1,27 @@
+# Argo CD notifications for the foundry install: deploy, sync-failure, and
+# degraded-health events posted to #devops through Notify. Like argocd-sso,
+# this owns only its keys in the upstream install's argocd-notifications-cm
+# (merged via ServerSideApply) plus the VaultSecretSync for the Notify token.
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd-notifications
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Gaucho-Racing/infrastructure.git
+    targetRevision: main
+    path: kubernetes/gr-foundry/manifests/argocd-notifications
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
